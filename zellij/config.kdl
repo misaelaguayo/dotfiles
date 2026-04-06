@@ -6,6 +6,17 @@
      // nvim keybinds
      unbind "Ctrl o"
      unbind "Ctrl i"
+
+    shared {
+        bind "Ctrl Space" {
+            LaunchOrFocusPlugin "https://github.com/misaelaguayo/zlauncher/releases/latest/download/zlauncher.wasm" {
+                floating true
+
+                // Use KDL raw string syntax r#"..."# for the JSON array
+                commands r#"[{"name": "Date", "cmd": "date -u +%Y-%m-%dT%H:%M:%SZ"}]"#
+            }
+        }
+    }
  }
 
 themes {
@@ -42,5 +53,5 @@ themes {
  copy_on_select true
 
 env {
-    XDG_CONFIG_HOME "/home/missileserv/.config"
+    XDG_CONFIG_HOME "/Users/misael/.config"
 }

@@ -1,6 +1,11 @@
 require("neotest").setup({
     adapters = {
-        require("neotest-vstest")
+        require("neotest-vitest"){
+            is_test_file = function(file_path)
+                return file_path:match("%.test%.tsx?$")
+            end,
+            vitest_args = { "--mode", "local-backend" }
+        },
     }
 })
 
@@ -43,7 +48,13 @@ dap.configurations.rust = {
     }
 }
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+capabilities.textDocument.foldingRange = {
+    dynamicRegistration = false,
+    lineFoldingOnly = true
+}
 
 require("mason-lspconfig").setup {
     automatic_enable = {
@@ -82,13 +93,15 @@ vim.lsp.config('lua_ls', {
     },
 })
 
+vim.lsp.enable('lua_ls')
+
 vim.lsp.config('roslyn_ls', {
     capabilities = capabilities,
     filetypes = { "cs" },
     cmd = {
         "Microsoft.CodeAnalysis.LanguageServer",
         "--logLevel=Information",
-        "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
+        "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.log.get_filename()),
         "--stdio",
     },
     handlers = {
@@ -158,4 +171,4 @@ vim.lsp.config('roslyn_ls', {
     },
 })
 
--- vim.lsp.enable("roslyn_ls")
+vim.lsp.enable("roslyn_ls")

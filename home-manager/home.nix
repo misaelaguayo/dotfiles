@@ -12,8 +12,8 @@
 
   fonts.fontconfig.enable = true;
 
-  # home.username = builtins.getEnv "USER";
-  # home.homeDirectory = builtins.getEnv "HOME";
+  home.username = builtins.getEnv "USER";
+  home.homeDirectory = builtins.getEnv "HOME";
 
   home.stateVersion = "23.11"; # Please read the comment before changing.
 
@@ -62,6 +62,7 @@
     };
 
     home-manager.enable = true;
+    nushell.enable = true;
   };
 
 }
