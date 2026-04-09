@@ -19,7 +19,6 @@
 
   home.packages = with pkgs; [
     ripgrep
-    nushell
     nerd-fonts.hack
     git
     docker
@@ -33,7 +32,6 @@
     cargo-generate
     nix-search-cli
     lua-language-server
-    neovim
     zellij
     # nix-search-tui
     zoxide
@@ -61,8 +59,26 @@
       nix-direnv.enable = true;
     };
 
+    neovim = {
+      enable = true;
+      withPython3 = true;
+      withRuby = false;
+
+      extraPython3Packages = ps: with ps; [
+        pynvim
+      ];
+    };
+
     home-manager.enable = true;
-    nushell.enable = true;
+
+    nushell = {
+      enable = true;
+      package = pkgs.nushell.overrideAttrs (oldAttrs: {
+        # temporary workaround. tests failing
+        doCheck = false;
+        doInstallCheck = false;
+      });
+    };
   };
 
 }

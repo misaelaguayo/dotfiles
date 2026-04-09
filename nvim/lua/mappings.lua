@@ -72,8 +72,8 @@ end)
 -- transparent keybindings
 -- vim.keymap.set('n', '<space>t', ':TransparentToggle<CR>')
 
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump({ count = -1, _highest = true, on_jump = vim.diagnostic.open_float }) end)
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump({ count = 1, _highest = true, on_jump = vim.diagnostic.open_float }) end)
 vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 
 -- gitsigns keybindings
@@ -118,12 +118,12 @@ vim.api.nvim_set_keymap(
     "n",
     "<leader>twr",
     "<cmd>lua require('neotest').run.run({ vitestCommand = 'vitest --watch' })<cr>",
-    {desc = "Run Watch"}
+    { desc = "Run Watch" }
 )
 
 vim.api.nvim_set_keymap(
     "n",
     "<leader>twf",
     "<cmd>lua require('neotest').run.run({ vim.fn.expand('%'), vitestCommand = 'vitest --watch' })<cr>",
-    {desc = "Run Watch File"}
+    { desc = "Run Watch File" }
 )

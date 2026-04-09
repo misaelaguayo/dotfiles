@@ -1,5 +1,18 @@
 return {
     {
+        "seblyng/roslyn.nvim",
+        opts = {
+            cmd = {
+                "dotnet",
+                "Microsoft.CodeAnalysis.LanguageServer",
+                "--logLevel",
+                "Information",
+                "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.log.get_filename()),
+                "--stdio",
+            },
+        },
+    },
+    {
         "folke/lazydev.nvim",
         ft = "lua", -- only load on lua files
         opts = {
@@ -8,14 +21,6 @@ return {
                 -- Load luvit types when the `vim.uv` word is found
                 { path = "${3rd}/luv/library", words = { "vim%.uv" } },
             },
-        },
-    },
-    {
-        "misaelaguayo/markdown.nvim",
-        build = "cargo build --release",
-        dev = true,
-        opts = {
-            converter_bin = "/Users/misaelaguayo/Projects/markdown.nvim/target/release/converter"
         },
     },
     {
@@ -59,26 +64,6 @@ return {
             "nvim-treesitter/nvim-treesitter",
             "nsidorenco/neotest-vstest",
             "marilari88/neotest-vitest"
-        }
-    },
-    {
-        "misaelaguayo/markdown.nvim",
-        build = "cargo build --release",
-        opts = {},
-        dependencies = {
-            {
-                "3rd/image.nvim",
-                build = false,
-                opts = {
-                    processor = "magick_cli",
-                },
-                config = function()
-                    require("image").setup({
-                        backend = "kitty",
-                        processor = "magick_cli",
-                    })
-                end
-            }
         }
     },
     {
