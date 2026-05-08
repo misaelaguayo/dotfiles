@@ -47,6 +47,14 @@
     rustup
     fzf
     carapace
+    (neovim.override {
+      withPython3 = true;
+      withRuby = false;
+
+      extraPython3Packages = ps: with ps; [
+        pynvim
+      ];
+    })
   ] ++ lib.optionals stdenv.isDarwin [
     yabai
     skhd
@@ -59,16 +67,6 @@
       nix-direnv.enable = true;
     };
 
-    neovim = {
-      enable = true;
-      withPython3 = true;
-      withRuby = false;
-
-      extraPython3Packages = ps: with ps; [
-        pynvim
-      ];
-    };
-
     home-manager.enable = true;
 
     nushell = {
@@ -79,6 +77,12 @@
         doInstallCheck = false;
       });
     };
-  };
 
+    gh = {
+      enable = true;
+      settings = {
+        git_protocol = "ssh";
+      };
+    };
+  };
 }
