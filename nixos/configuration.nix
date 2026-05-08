@@ -40,6 +40,12 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
+  # query dnsmasq for internet
+  networking.nameservers = [ "127.0.0.1"];
+
+  # disable resolved to prevent conflicts on port 53 for dnsmasq
+  services.resolved.enable = false;
+
   # Enable networking
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
@@ -76,7 +82,7 @@
   users.users.missileserv = {
     isNormalUser = true;
     description = "missileserv";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" ];
     packages = with pkgs; [ ];
   };
 
@@ -111,11 +117,10 @@
 
   # List services that you want to enable:
 
-  services.syncthing = {
-    enable = true;
-    openDefaultPorts = true;
-    guiAddress = "0.0.0.0:8384";
-  };
+  # services.syncthing = {
+    # openDefaultPorts = true;
+    # guiAddress = "0.0.0.0:8384";
+  # };
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
@@ -128,7 +133,7 @@
 
   # mDNS setup to allow *.local discovery
   services.avahi = {
-    enable = true;
+    enable = false;
     nssmdns4 = true;
     publish = {
       enable = true;
@@ -137,38 +142,114 @@
     };
   };
 
+  services.dnsmasq = {
+    enable = true;
+
+    settings = {
+      server = [ "1.1.1.1" "1.0.0.1" ];
+
+      address = "/missileserv.lan/192.168.0.194";
+
+      # listen on localhost and static ip
+      listen-address = "127.0.0.1,192.168.0.194";
+    };
+  };
+
+  services.tailscale = {
+    enable = true;
+  };
+
   # reverse proxy for accessing programs
   services.caddy = {
     enable = true;
 
     extraConfig = ''
-            missileserv.local {
-      	 tls internal
-               handle_path /torrent/* {
-      	  reverse_proxy localhost:8080
-      	}
+	    :8124 {
+	      tls internal
 
-      	 route /radarr/* {
-      	  reverse_proxy localhost:7878
-      	}
+	      reverse_proxy localhost:8123
+	    }
 
-      	 route /sonarr/* {
-      	  reverse_proxy localhost:8989
-      	}
+	    home.missileserv.lan {
+	      tls internal
+	      reverse_proxy localhost:8123
+	    }
 
-      	 handle_path /overseerr/* {
-      	  reverse_proxy localhost:5055
-      	}
+	    missileserv.lan {
+	        tls internal
 
-      	 route /grafana/* {
-      	  reverse_proxy localhost:3000
-      	}
+	        handle /smokeping* {
+	          reverse_proxy localhost:9101
+	        }
 
-      	handle_path /home/* {
-      	  reverse_proxy localhost:8123
-      	}
-            }
+	        handle_path /torrent* {
+		  reverse_proxy localhost:8080
+		}
+
+		handle /radarr* {
+		  reverse_proxy localhost:7878
+		}
+
+		handle /sonarr* {
+		  reverse_proxy localhost:8989
+		}
+
+		handle /overseerr* {
+		  reverse_proxy localhost:5055
+		}
+
+		handle /grafana* {
+		  reverse_proxy localhost:3000
+		}
+
+		handle /auth* {
+		  reverse_proxy localhost:9000
+		}
+	    }
     '';
+  };
+
+  services.mosquitto = {
+    enable = true;
+    listeners = [
+      {
+        port = 1883;
+        users = {
+          zigbee = {
+            password = "zigbee";
+            acl = [ "readwrite #" ];
+          };
+        };
+      }
+    ];
+  };
+
+  services.zigbee2mqtt = {
+    enable = true;
+  
+    settings = {
+      serial = {
+        port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_92e8b33651a3ef118dc94cbd61ce3355-if00-port0";
+	adapter="ember";
+      };
+  
+      mqtt = {
+        server = "mqtt://localhost:1883";
+        user = "zigbee";
+        password = "zigbee";
+      };
+  
+      frontend = {
+	enabled = true;
+        port = 8099;
+      };
+  
+      homeassistant = {
+       enabled = true;
+      };
+  
+      permit_join = false;
+    };
   };
 
   # Start docker daemon
@@ -185,7 +266,7 @@
   '';
 
   fileSystems."/mnt/media" = {
-    device = "192.168.0.42:/volume2/Media";
+    device = "192.168.0.43:/volume2/Media";
     fsType = "nfs";
     options = [
       "bg"
