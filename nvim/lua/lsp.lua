@@ -1,3 +1,9 @@
+vim.g.neotest_vstest = {
+    dap_settings = {
+        type = "coreclr",
+    },
+}
+
 require("neotest").setup({
     adapters = {
         require("neotest-vitest"){
@@ -6,6 +12,7 @@ require("neotest").setup({
             end,
             vitest_args = { "--mode", "local-backend" }
         },
+        require("neotest-vstest"),
     }
 })
 
@@ -13,7 +20,7 @@ local dap = require('dap')
 
 dap.adapters.coreclr = {
     type = 'executable',
-    command = '/Users/misael/.nix-profile/bin/netcoredbg',
+    command = 'netcoredbg',
     args = { '--interpreter=vscode' }
 }
 
@@ -30,7 +37,7 @@ dap.configurations.cs = {
 
 dap.adapters.lldb = {
     type = 'executable',
-    command = '/Users/misael/.nix-profile/bin/lldb-dap',
+    command = 'lldb-dap',
     name = 'lldb',
 }
 

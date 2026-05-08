@@ -45,6 +45,9 @@
     rustup
     fzf
     carapace
+    claude-code
+    mosh
+    ghgrab
     (neovim.override {
       withPython3 = true;
       withRuby = false;
@@ -61,19 +64,7 @@
   programs = {
     direnv = {
       enable = true;
-      enableNushellIntegration = true;
       nix-direnv.enable = true;
-    };
-
-    home-manager.enable = true;
-
-    nushell = {
-      enable = true;
-      package = pkgs.nushell.overrideAttrs (oldAttrs: {
-        # temporary workaround. tests failing
-        doCheck = false;
-        doInstallCheck = false;
-      });
     };
 
     gh = {
@@ -104,5 +95,7 @@
         vcs.order = [ "jj" "git" "hg" "pijul" "fossil" ];
       };
     };
+
+    home-manager.enable = true;
   };
 }

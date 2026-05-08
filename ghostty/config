@@ -21,6 +21,6 @@ window-decoration = true
 
 # Shell Integration
 
-shell-integration-features = cursor,sudo,title
+shell-integration-features = "sudo,ssh-terminfo,ssh-env"
 
-custom-shader = /users/misael/.config/ghostty/shaders/debug_cursor_animated.glsl
+custom-shader = /users/misaelaguayo/.config/ghostty/shaders/debug_cursor_animated.glsl

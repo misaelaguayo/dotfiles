@@ -4,12 +4,16 @@ email = "maguayo@armlend.com"
 
 [ui]
 diff-editor = ["nvim", "-c", "DiffEditor $left $right $output"]
-diff-formatter = "delta"
+diff-formatter = "difft"
 merge-editor = "mergiraf"
 conflict-marker-style = "git"
 
 [revset-aliases]
 immutable_heads = "builtin_immutable_heads() | (remote_bookmarks())"
+
+[merge-tools.diffconflicts]
+program = "nvim"
+merge-args = ["-c", "DiffConflicts", "$output", "$base", "$left", "$right"]
 
 [aliases]
 # Find the closest ancestor with a bookmark pointing at it, and move it to the

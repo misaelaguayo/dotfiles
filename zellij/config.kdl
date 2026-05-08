@@ -1,57 +1,23 @@
- on_force_close "quit"
- default_shell "nu"
- pane_frames false
+// Free up Ctrl-n / Ctrl-p / Ctrl-b so terminal apps (nvim completion, fzf/fzf-lua
+// result navigation, etc.) receive them directly instead of zellij intercepting
+// them to switch modes. The same actions are still reachable, just on Alt instead.
+keybinds {
+    unbind "Ctrl n"
+    unbind "Ctrl p"
+    unbind "Ctrl b"
 
- keybinds {
-     // nvim keybinds
-     unbind "Ctrl o"
-     unbind "Ctrl i"
-
-    shared {
-        bind "Ctrl Space" {
-            LaunchOrFocusPlugin "https://github.com/misaelaguayo/zlauncher/releases/latest/download/zlauncher.wasm" {
-                floating true
-
-                // Use KDL raw string syntax r#"..."# for the JSON array
-                commands r#"[{"name": "Date", "cmd": "date -u +%Y-%m-%dT%H:%M:%SZ"}]"#
-            }
-        }
+    shared_except "resize" "locked" {
+        bind "Alt n" { SwitchToMode "Resize"; }
     }
- }
-
-themes {
-    gruvbox-light {
-        fg 60 56 54
-        bg 251 82 75
-        black 40 40 40
-        red 205 75 69
-        green 152 151 26
-        yellow 215 153 33
-        blue 69 133 136
-        magenta 177 98 134
-        cyan 104 157 106
-        white 213 196 161
-        orange 214 93 14
+    resize {
+        bind "Alt n" { SwitchToMode "Normal"; }
     }
-    gruvbox-dark {
-        fg 213 196 161
-        bg 40 40 40
-        black 60 56 54
-        red 204 36 29
-        green 152 151 26
-        yellow 215 153 33
-        blue 69 133 136
-        magenta 177 98 134
-        cyan 104 157 106
-        white 251 241 199
-        orange 214 93 14
+
+    shared_except "pane" "locked" {
+        bind "Alt p" { SwitchToMode "Pane"; }
     }
-}
 
- default_layout "default"
-
- copy_on_select true
-
-env {
-    XDG_CONFIG_HOME "/Users/misael/.config"
+    shared_except "tmux" "locked" {
+        bind "Alt b" { SwitchToMode "Tmux"; }
+    }
 }
