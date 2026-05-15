@@ -16,8 +16,8 @@
 
   # fixed rather than read from $USER/$HOME: flakes evaluate purely, where
   # getEnv always returns ""
-  home.username = "misaelaguayo";
-  home.homeDirectory = "/Users/misaelaguayo";
+  home.username = "misael";
+  home.homeDirectory = "/Users/misael";
 
   xdg.configFile."ghostty/config".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/dotfiles/ghostty/config";
@@ -38,6 +38,21 @@
     claude-code
     mosh
     ghgrab
+    fzf
+    carapace
+    claude-code
+    lazyjj
+    python3
+    python314Packages.python-lsp-server
+    (neovim.override {
+      withPython3 = true;
+      withRuby = false;
+
+      extraPython3Packages = ps: with ps; [
+        pynvim
+      ];
+    })
+  ] ++ lib.optionals stdenv.isDarwin [
     yabai
     skhd
     firefox

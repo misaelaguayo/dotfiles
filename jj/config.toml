@@ -21,7 +21,7 @@ conflict-marker-style = "git"
 diff-args = ["--color=always", "--display=side-by-side", "$left", "$right"]
 
 [revset-aliases]
-immutable_heads = "builtin_immutable_heads() | (remote_bookmarks())"
+"immutable_heads()" = "builtin_immutable_heads() | remote_bookmarks()"
 
 [merge-tools.diffconflicts]
 program = "nvim"

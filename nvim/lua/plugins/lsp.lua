@@ -63,16 +63,21 @@ return {
     "williamboman/mason-lspconfig.nvim",
     {
         "seblyng/roslyn.nvim",
-        opts = {
-            cmd = {
-                "dotnet",
-                "Microsoft.CodeAnalysis.LanguageServer",
-                "--logLevel",
-                "Information",
-                "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.log.get_filename()),
-                "--stdio",
-            },
-        },
+        config = function()
+            -- nixpkgs roslyn-ls doesn't support --daemon-mode, so override the default cmd
+            vim.lsp.config("roslyn", {
+                cmd = {
+                    "Microsoft.CodeAnalysis.LanguageServer",
+                    "--logLevel",
+                    "Information",
+                    "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.log.get_filename()),
+                    "--stdio",
+                    "--clientProcessId",
+                    tostring(vim.uv.os_getpid()),
+                },
+            })
+            require("roslyn").setup({})
+        end,
     },
     {
         "folke/lazydev.nvim",
