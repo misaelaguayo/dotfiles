@@ -4,7 +4,15 @@
 
 { config, pkgs, ... }:
 
-{
+let
+  steamStart = pkgs.writeShellScript "sunshine-steam-start" ''
+    pkill -x steam || true
+    sleep 3
+  '';
+  steamStop = pkgs.writeShellScript "sunshine-steam-stop" ''
+    pkill -x steam || true
+  '';
+in {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -55,12 +63,13 @@
   
   hardware.nvidia = {
     modesetting.enable = true;
-  
+    nvidiaPersistenced = true;
+
     # RTX 2070 SUPER / Turing
     open = false;
-  
+
     nvidiaSettings = true;
-  
+
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
@@ -83,49 +92,82 @@
 
   services.displayManager.defaultSession = "plasma";
 
-
-  services.sunshine = {
-    enable = false;
-    openFirewall = true; # Automatically opens Moonlight streaming ports
-  };
-
-  # 2. Grant the custom compiled binary raw screen-capture privileges
-  security.wrappers.sunshine = {
-    owner = "root";
-    group = "root";
-    capabilities = "cap_sys_admin+p";
-    source = "${(pkgs.sunshine.override { cudaSupport = true; })}/bin/sunshine";
-  };
-
-  # 3. Launch Sunshine natively inside your user desktop session
-  systemd.user.services.sunshine = {
-    description = "Sunshine Game Stream Host (NVENC Active)";
-    wantedBy = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
-    
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "/run/wrappers/bin/sunshine /etc/sunshine";
-      Restart = "on-failure";
-      RestartSec = "2s";
+  services.avahi = {
+    enable = true;
+    publish = {
+      enable = true;
+      userServices = true;
     };
   };
 
-  environment.etc."sunshine/sunshine.conf".text = ''
-    apps_path = /etc/sunshine/apps.json
-  '';
-  environment.etc."sunshine/apps.json".text = builtins.toJSON {
-    apps = [
-      {
-        name = "Steam Big Picture";
-        cmd = "steam steam://open/gamepadui";
-        "undo-cmd" = "setsid steam steam://close/bigpicture";
-        "detached" = [ "steam steam://open/gamepadui" ];
-      }
-    ];
+  systemd.user.services.sunshine.environment = {
+    WAYLAND_DISPLAY = "wayland-0";
+    DISPLAY = ":0";
   };
 
+  services.sunshine = {
+    enable = true;
+    openFirewall = true;
+    capSysAdmin = true;
+    package = pkgs.sunshine.override { cudaSupport = true; };
+    settings = {
+      encoder = "nvenc";
+      capture = "kms";
+      min_log_level = 2;
+    };
+    applications = {
+      env = {
+        PATH = "$(PATH):$(HOME)/.local/bin";
+        DISPLAY = ":0";
+        WAYLAND_DISPLAY = "wayland-0";
+        XDG_RUNTIME_DIR = "/run/user/1000";
+        DBUS_SESSION_BUS_ADDRESS = "unix:path=/run/user/1000/bus";
+      };
+      apps = [
+        {
+          name = "Desktop";
+          image-path = "desktop.png";
+        }
+        {
+          name = "Low Res Desktop";
+          image-path = "desktop.png";
+          prep-cmd = [
+            {
+              do = "xrandr --output HDMI-1 --mode 1920x1080";
+              undo = "xrandr --output HDMI-1 --mode 1920x1200";
+            }
+          ];
+        }
+        {
+          name = "Steam Big Picture";
+          prep-cmd = [
+            {
+              do = "sudo -u misael ${steamStart}";
+              undo = "sudo -u misael ${steamStop}";
+            }
+          ];
+          detached = [ "sudo -u misael setsid steam -gamepadui" ];
+          image-path = "steam.png";
+        }
+      ];
+    };
+  };
+
+
   security.polkit.enable = true;
+
+  security.sudo.extraRules = [
+    {
+      users = [ "misael" ];
+      runAs = "misael";
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" "SETENV" ];
+        }
+      ];
+    }
+  ];
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -164,10 +206,13 @@
       neovim
       jujutsu
       zellij
+      claude-code
     ];
   };
 
   hardware.uinput.enable = true;
+
+  boot.kernel.sysctl."vm.max_map_count" = 2147483642;
 
   # Install firefox.
   programs.firefox.enable = true;
@@ -180,9 +225,6 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
-      linuxPackages.nvidia_x11
       xorg.xrandr
   ];
 
@@ -198,6 +240,8 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+
+  services.tailscale.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
