@@ -2,29 +2,18 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ inputs
-, lib
+{ lib
 , config
 , pkgs
 , ...
 }: {
   imports =
     [
-      # Include the results of the hardware scan.
       ./hardware-configuration.nix
       <home-manager/nixos>
     ];
 
-  nix =
-    let
-      flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
-    in
-    {
-      settings = {
-        # Enable flakes and new 'nix' command
-        experimental-features = "nix-command flakes";
-      };
-    };
+  nix.settings.experimental-features = "nix-command flakes";
 
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -86,7 +75,11 @@
     packages = with pkgs; [ ];
   };
 
-  home-manager.users.missileserv = import "/home/missileserv/.config/home-manager/home.nix";
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+  home-manager.users.missileserv = import ../../../home-manager/server.nix;
+
+  nixpkgs.overlays = [ (import ../../../home-manager/overlay.nix) ];
 
   # Enable automatic login for the user.
   services.getty.autologinUser = "missileserv";
