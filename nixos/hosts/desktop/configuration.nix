@@ -58,18 +58,25 @@ in {
 
   services.xserver.enable = true;
 
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+
   services.displayManager.autoLogin = {
     enable = true;
     user = "misael";
   };
   services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-  services.displayManager.defaultSession = "plasma";
+  services.displayManager.defaultSession = "hyprland";
 
-  services.xrdp = {
-    enable = true;
-    openFirewall = true;
-    defaultWindowManager = "startplasma-x11";
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    LIBVA_DRIVER_NAME = "nvidia";
+    GBM_BACKEND = "nvidia-drm";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    NVD_BACKEND = "direct";
+    XDG_SESSION_TYPE = "wayland";
   };
 
   services.avahi = {
@@ -81,7 +88,7 @@ in {
   };
 
   systemd.user.services.sunshine.environment = {
-    WAYLAND_DISPLAY = "wayland-0";
+    WAYLAND_DISPLAY = "wayland-1";
     DISPLAY = ":0";
     XDG_RUNTIME_DIR = "/run/user/1000";
     PIPEWIRE_RUNTIME_DIR = "/run/user/1000";
@@ -102,7 +109,7 @@ in {
       env = {
         PATH = "$(PATH):$(HOME)/.local/bin";
         DISPLAY = ":0";
-        WAYLAND_DISPLAY = "wayland-0";
+        WAYLAND_DISPLAY = "wayland-1";
         XDG_RUNTIME_DIR = "/run/user/1000";
         DBUS_SESSION_BUS_ADDRESS = "unix:path=/run/user/1000/bus";
         PULSE_SERVER = "unix:/run/user/1000/pulse/native";
@@ -113,16 +120,6 @@ in {
           image-path = "desktop.png";
         }
         {
-          name = "Low Res Desktop";
-          image-path = "desktop.png";
-          prep-cmd = [
-            {
-              do = "xrandr --output HDMI-1 --mode 1920x1080";
-              undo = "xrandr --output HDMI-1 --mode 1920x1200";
-            }
-          ];
-        }
-        {
           name = "Steam Big Picture";
           prep-cmd = [
             {
@@ -130,7 +127,7 @@ in {
               undo = "sudo -u misael ${steamStop}";
             }
           ];
-          detached = [ "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui" ];
+          detached = [ "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DISPLAY=:0 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui -fullscreen" ];
           image-path = "steam.png";
         }
       ];

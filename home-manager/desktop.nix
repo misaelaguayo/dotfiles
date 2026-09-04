@@ -1,7 +1,10 @@
 { pkgs, lib, ... }:
 
 {
-  imports = [ ./common.nix ];
+  imports = [
+    ./common.nix
+    ./wayland.nix
+  ];
 
   home.username = "misael";
   home.homeDirectory = "/home/misael";
