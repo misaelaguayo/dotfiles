@@ -89,7 +89,7 @@ in {
 
   systemd.user.services.sunshine.environment = {
     WAYLAND_DISPLAY = "wayland-1";
-    DISPLAY = ":0";
+    DISPLAY = ":1";
     XDG_RUNTIME_DIR = "/run/user/1000";
     PIPEWIRE_RUNTIME_DIR = "/run/user/1000";
     PULSE_SERVER = "unix:/run/user/1000/pulse/native";
@@ -108,7 +108,7 @@ in {
     applications = {
       env = {
         PATH = "$(PATH):$(HOME)/.local/bin";
-        DISPLAY = ":0";
+        DISPLAY = ":1";
         WAYLAND_DISPLAY = "wayland-1";
         XDG_RUNTIME_DIR = "/run/user/1000";
         DBUS_SESSION_BUS_ADDRESS = "unix:path=/run/user/1000/bus";
@@ -127,7 +127,7 @@ in {
               undo = "sudo -u misael ${steamStop}";
             }
           ];
-          detached = [ "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DISPLAY=:0 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui -fullscreen" ];
+          detached = [ "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DISPLAY=:1 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui -fullscreen" ];
           image-path = "steam.png";
         }
       ];
@@ -204,6 +204,7 @@ in {
 
   environment.systemPackages = with pkgs; [
     xorg.xrandr
+    xorg.xhost
   ];
 
   services.openssh.enable = true;

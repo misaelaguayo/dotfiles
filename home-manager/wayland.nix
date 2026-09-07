@@ -25,6 +25,7 @@
       exec-once = [
         "hyprpaper"
         "waybar"
+        "xhost +local:"
       ];
 
       env = [
