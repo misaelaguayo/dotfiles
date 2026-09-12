@@ -2,18 +2,29 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ lib
+{ inputs
+, lib
 , config
 , pkgs
 , ...
 }: {
   imports =
     [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
       <home-manager/nixos>
     ];
 
-  nix.settings.experimental-features = "nix-command flakes";
+  nix =
+    let
+      flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
+    in
+    {
+      settings = {
+        # Enable flakes and new 'nix' command
+        # experimental-features = "nix-command flakes";
+      };
+    };
 
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -71,7 +82,7 @@
   users.users.missileserv = {
     isNormalUser = true;
     description = "missileserv";
-    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" "video" "input" ];
     packages = with pkgs; [ ];
   };
 
@@ -98,6 +109,9 @@
     cmake
     bluez
     wl-clipboard
+    mesa
+    libGL
+    xorg.xauth
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -116,7 +130,12 @@
   # };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings.X11Forwarding = true;
+  };
+
+  programs.ssh.setXAuthLocation = true;
 
   # Automatic system reboot
   services.cron.systemCronJobs = [
@@ -141,10 +160,18 @@
     settings = {
       server = [ "1.1.1.1" "1.0.0.1" ];
 
-      address = "/missileserv.lan/192.168.0.194";
+      address = [
+      	"/missileserv.lan/192.168.0.194"
+      	"/desktop.lan/192.168.0.190"
+      	"/auth.misaelaguayo.com/192.168.0.194"
+      ];
 
       # listen on localhost and static ip
       listen-address = "127.0.0.1,192.168.0.194";
+
+      # arr stack can starve dns hits
+      cache-size = 10000;
+      dns-forward-max = 1000;
     };
   };
 
@@ -157,18 +184,17 @@
     enable = true;
 
     extraConfig = ''
-	    :8124 {
-	      tls internal
-
-	      reverse_proxy localhost:8123
-	    }
-
 	    home.missileserv.lan {
 	      tls internal
 	      reverse_proxy localhost:8123
 	    }
 
-	    missileserv.lan {
+	    auth.misaelaguayo.com {
+	      tls internal
+	      reverse_proxy localhost:9000
+	    }
+
+	    missileserv missileserv.lan {
 	        tls internal
 
 	        handle /smokeping* {
@@ -176,28 +202,24 @@
 	        }
 
 	        handle_path /torrent* {
-		  reverse_proxy localhost:8080
-		}
+		      reverse_proxy localhost:8080
+		    }
 
-		handle /radarr* {
-		  reverse_proxy localhost:7878
-		}
+		    handle /radarr* {
+		      reverse_proxy localhost:7878
+		    }
 
-		handle /sonarr* {
-		  reverse_proxy localhost:8989
-		}
+		    handle /sonarr* {
+		      reverse_proxy localhost:8989
+		    }
 
-		handle /overseerr* {
-		  reverse_proxy localhost:5055
-		}
+		    handle /overseerr* {
+		      reverse_proxy localhost:5055
+		    }
 
-		handle /grafana* {
-		  reverse_proxy localhost:3000
-		}
-
-		handle /auth* {
-		  reverse_proxy localhost:9000
-		}
+		    handle /grafana* {
+		      reverse_proxy localhost:3000
+		    }
 	    }
     '';
   };
@@ -264,6 +286,10 @@
     options = [
       "bg"
     ];
+  };
+
+  system.autoUpgrade = {
+    enable = true;
   };
 
   # This value determines the NixOS release from which the default

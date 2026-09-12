@@ -147,6 +147,19 @@ in {
         }
       ];
     }
+    {
+      users = [ "misael" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/systemctl reboot";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl poweroff";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
   ];
 
   services.xserver.xkb = {

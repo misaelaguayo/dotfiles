@@ -15,8 +15,6 @@
     mergiraf
     delta
     difftastic
-    starship
-    starship-jj
     pandoc
     fzf
     carapace
@@ -36,12 +34,33 @@
 
     home-manager.enable = true;
 
-    nushell.enable = true;
+    nushell = {
+      enable = true;
+      configFile.source = ../nushell/config.nu;
+      envFile.source = ../nushell/env.nu;
+    };
 
     gh = {
       enable = true;
       settings = {
         git_protocol = "ssh";
+      };
+    };
+
+    starship = {
+      enable = true;
+      # nushell/config.nu already handles init via vendor/autoload
+      enableNushellIntegration = false;
+      extraPackages = [ pkgs.starship-jj ];
+      settings = {
+        custom.jj = {
+          command = "prompt";
+          format = "$output";
+          ignore_timeout = true;
+          shell = [ "starship-jj" "--ignore-working-copy" "starship" ];
+          use_stdin = false;
+          when = true;
+        };
       };
     };
   };

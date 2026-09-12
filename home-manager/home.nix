@@ -40,8 +40,6 @@
     git-credential-manager
     roslyn-ls
     difftastic
-    starship
-    starship-jj
     pandoc
     imagemagick
     rustup
@@ -82,6 +80,23 @@
       enable = true;
       settings = {
         git_protocol = "ssh";
+      };
+    };
+
+    starship = {
+      enable = true;
+      # nushell/config.nu already handles init via vendor/autoload
+      enableNushellIntegration = false;
+      extraPackages = [ pkgs.starship-jj ];
+      settings = {
+        custom.jj = {
+          command = "prompt";
+          format = "$output";
+          ignore_timeout = true;
+          shell = [ "starship-jj" "--ignore-working-copy" "starship" ];
+          use_stdin = false;
+          when = true;
+        };
       };
     };
   };
