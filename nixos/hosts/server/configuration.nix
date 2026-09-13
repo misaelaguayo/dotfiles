@@ -83,7 +83,7 @@
     isNormalUser = true;
     description = "missileserv";
     extraGroups = [ "networkmanager" "wheel" "docker" "dialout" "video" "input" ];
-    packages = with pkgs; [ ];
+    packages = with pkgs; [ claude-code ];
   };
 
   home-manager.useGlobalPkgs = true;
@@ -143,6 +143,50 @@
     "0 0 * * * root ${pkgs.systemd}/bin/systemctl reboot"
   ];
 
+  # Hardware watchdog: if the system fully hangs (e.g. a resource-exhaustion
+  # pileup that the midnight cron reboot can't run through), pet /dev/watchdog
+  # every ~10s and let it hard-reset the box if nothing pets it for 30s.
+  systemd.watchdog.runtimeTime = "30s";
+
+  # Shared resource pool for the *arr stack (chaptarr/sonarr/radarr/prowlarr).
+  # Containers are assigned to this slice via `cgroup_parent` in their
+  # docker-compose.yml so any one of them can burst up to the whole pool
+  # while the others are idle, but the combined total is capped so a scan
+  # in one of them can't starve the rest of the host.
+  systemd.slices."arr-stack".sliceConfig = {
+    CPUQuota = "400%"; # up to 4 of the 8 logical cores, shared
+    MemoryMax = "16G";
+    IOReadBandwidthMax = "/dev/sda 40M";
+    IOReadIOPSMax = "/dev/sda 800";
+  };
+
+  # torrent/flaresolverr use network_mode: "service:vpn" in
+  # ~/Projects/vpn/docker-compose.yml, which pins them to the vpn
+  # container's network namespace by container ID. If vpn is ever
+  # recreated (new ID), Docker's restart policy can't re-resolve that
+  # reference and the dependent container is orphaned forever - it keeps
+  # failing to restart with "No such container" instead of recovering.
+  # Periodically re-running `compose up` reconciles any such orphan
+  # against whatever vpn container currently exists.
+  systemd.services."vpn-stack-reconcile" = {
+    description = "Re-attach any vpn-stack containers orphaned by a vpn container recreation";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "missileserv";
+      WorkingDirectory = "/home/missileserv/Projects/vpn";
+      ExecStart = "${pkgs.docker}/bin/docker compose up -d";
+    };
+  };
+
+  systemd.timers."vpn-stack-reconcile" = {
+    description = "Timer for vpn-stack-reconcile";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "2m";
+      OnUnitActiveSec = "15m";
+    };
+  };
+
   # mDNS setup to allow *.local discovery
   services.avahi = {
     enable = false;
@@ -197,24 +241,72 @@
 	    missileserv missileserv.lan {
 	        tls internal
 
+	        handle /outpost.goauthentik.io/* {
+	          reverse_proxy localhost:9000
+	        }
+
 	        handle /smokeping* {
+	          forward_auth localhost:9000 {
+	            uri /outpost.goauthentik.io/auth/caddy
+	            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+	          }
 	          reverse_proxy localhost:9101
 	        }
 
 	        handle_path /torrent* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
 		      reverse_proxy localhost:8080
 		    }
 
 		    handle /radarr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
 		      reverse_proxy localhost:7878
 		    }
 
 		    handle /sonarr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
 		      reverse_proxy localhost:8989
 		    }
 
 		    handle /overseerr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
 		      reverse_proxy localhost:5055
+		    }
+
+		    handle /chaptarr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:8789
+		    }
+
+		    handle /prowlarr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:9696
+		    }
+
+		    handle /prometheus* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:9090
 		    }
 
 		    handle /grafana* {
