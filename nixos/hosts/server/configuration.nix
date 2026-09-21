@@ -137,6 +137,9 @@
 
   programs.ssh.setXAuthLocation = true;
 
+  # mosh for resilient connections over patchy wifi (UDP, survives roaming/dropouts)
+  programs.mosh.enable = true;
+
   # Automatic system reboot
   services.cron.systemCronJobs = [
     # Schedule a reboot every day at midnight
@@ -293,6 +296,16 @@
 		      reverse_proxy localhost:9696
 		    }
 
+		    handle /kapowarr* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:5656
+		    }
+
+		    # Kavita has its own OIDC login against Authentik, so it
+		    # skips the forward_auth gate (same as home/grafana).
 		    handle /kavita* {
 		      reverse_proxy localhost:5000
 		    }
