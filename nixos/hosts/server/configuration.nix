@@ -277,14 +277,6 @@
 		      reverse_proxy localhost:8989
 		    }
 
-		    handle /overseerr* {
-		      forward_auth localhost:9000 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy localhost:5055
-		    }
-
 		    handle /chaptarr* {
 		      forward_auth localhost:9000 {
 		        uri /outpost.goauthentik.io/auth/caddy
@@ -302,10 +294,6 @@
 		    }
 
 		    handle /kavita* {
-		      forward_auth localhost:9000 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
 		      reverse_proxy localhost:5000
 		    }
 
@@ -379,6 +367,12 @@
 
   # Start docker daemon
   virtualisation.docker.enable = true;
+
+  # Wait for nas to be mounted before starting containers which depend on its data
+  systemd.services.docker = {
+    after = [ "mnt-media.mount" ];
+    requires = [ "mnt-media.mount" ];
+  };
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 22 8384 ];
