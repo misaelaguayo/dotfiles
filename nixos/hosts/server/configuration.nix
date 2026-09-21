@@ -301,6 +301,14 @@
 		      reverse_proxy localhost:9696
 		    }
 
+		    handle /kavita* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:5000
+		    }
+
 		    handle /prometheus* {
 		      forward_auth localhost:9000 {
 		        uri /outpost.goauthentik.io/auth/caddy
@@ -311,6 +319,16 @@
 
 		    handle /grafana* {
 		      reverse_proxy localhost:3000
+		    }
+
+		    # catch-all: dashboard linking out to everything above. Must stay
+		    # last so it doesn't shadow the more specific handles.
+		    handle {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy localhost:3010
 		    }
 	    }
     '';
