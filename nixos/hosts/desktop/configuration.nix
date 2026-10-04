@@ -11,7 +11,6 @@ let
 in {
   imports = [
     ./hardware-configuration.nix
-    <home-manager/nixos>
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -190,8 +189,6 @@ in {
     ];
   };
 
-  home-manager.useGlobalPkgs = true;
-  home-manager.useUserPackages = true;
   home-manager.users.misael = import ../../../home-manager/desktop.nix;
 
   hardware.uinput.enable = true;
@@ -200,9 +197,6 @@ in {
 
   programs.firefox.enable = true;
   programs.steam.enable = true;
-
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.overlays = [ (import ../../../home-manager/overlay.nix) ];
 
   # Prevent suspend so SSH and Sunshine streams aren't dropped on idle
   services.logind.settings.Login = {
