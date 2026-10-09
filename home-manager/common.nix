@@ -51,7 +51,16 @@
       enable = true;
       # nushell/config.nu already handles init via vendor/autoload
       enableNushellIntegration = false;
+      extraPackages = [ pkgs.starship-jj ];
       settings = {
+        custom.jj = {
+          command = "prompt";
+          format = "$output";
+          ignore_timeout = true;
+          shell = [ "starship-jj" "--ignore-working-copy" "starship" ];
+          use_stdin = false;
+          when = true;
+        };
         format = lib.concatStrings [
           "$username$hostname$localip$shlvl$singularity$kubernetes$nats"
           "$directory$vcsh$vcs"

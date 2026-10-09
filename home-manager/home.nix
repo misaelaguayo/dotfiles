@@ -1,6 +1,8 @@
 { pkgs, lib, ... }:
 
 {
+  imports = [ ./common.nix ];
+
   nixpkgs = {
     config = {
       allowUnfree = true;
@@ -15,87 +17,38 @@
   home.username = builtins.getEnv "USER";
   home.homeDirectory = builtins.getEnv "HOME";
 
-  home.stateVersion = "23.11"; # Please read the comment before changing.
-
   home.packages = with pkgs; [
-    ripgrep
     nerd-fonts.hack
-    git
     docker
-    nix-output-monitor
-    jujutsu
-    nodejs_24
     docker-compose
     netcoredbg
     lldb
     deno
     cargo-generate
-    nix-search-cli
     lua-language-server
-    zellij
-    # nix-search-tui
-    zoxide
-    mergiraf
-    delta
     git-credential-manager
     roslyn-ls
-    difftastic
-    pandoc
     imagemagick
     rustup
-    fzf
-    carapace
     claude-code
     mosh
     ghgrab
-    (neovim.override {
-      withPython3 = true;
-      withRuby = false;
-
-      extraPython3Packages = ps: with ps; [
-        pynvim
-      ];
-    })
-  ] ++ lib.optionals stdenv.isDarwin [
     yabai
     skhd
   ];
 
   programs = {
-    direnv = {
-      enable = true;
-      nix-direnv.enable = true;
-    };
+    nushell = {
+      package = pkgs.nushell.overrideAttrs (oldAttrs: {
+        # temporary workaround. tests failing
+        doCheck = false;
+        doInstallCheck = false;
+      });
 
-    gh = {
-      enable = true;
-      settings = {
-        git_protocol = "ssh";
-      };
+      # mac's ~/.config/nushell is a manual symlink into this checkout,
+      # not home-manager managed like it is on the NixOS hosts.
+      configFile = lib.mkForce null;
+      envFile = lib.mkForce null;
     };
-
-    starship = {
-      enable = true;
-      # nushell/config.nu already handles init via vendor/autoload
-      enableNushellIntegration = false;
-      settings = {
-        format = lib.concatStrings [
-          "$username$hostname$localip$shlvl$singularity$kubernetes$nats"
-          "$directory$vcsh$vcs"
-          "$docker_context$package$bun$c$cmake$cobol$cpp$daml$dart$deno$dotnet"
-          "$elixir$elm$erlang$fennel$fortran$gleam$golang$gradle$haskell$haxe"
-          "$helm$java$julia$kotlin$lua$maven$mojo$nim$nodejs$ocaml$odin$opa"
-          "$perl$php$pulumi$purescript$python$quarto$raku$rlang$red$ruby$rust"
-          "$scala$solidity$swift$terraform$typst$vlang$vagrant$xmake$zig$buf"
-          "$guix_shell$nix_shell$conda$pixi$meson$spack$memory_usage"
-          "$aws$gcloud$openstack$azure$direnv$env_var$mise$crystal$custom"
-          "$sudo$cmd_duration$line_break$jobs$battery$time$status$container"
-          "$netns$os$shell$character"
-        ];
-        vcs.order = [ "jj" "git" "hg" "pijul" "fossil" ];
-      };
-    };
-
-    home-manager.enable = true;
   };
 }
