@@ -12,7 +12,7 @@ background-opacity = 1
 unfocused-split-opacity = 0.8
 
 # Command
-command = $HOME/.nix-profile/bin/nu --config $HOME/.config/nushell/config.nu --env-config $HOME/.config/nushell/env.nu
+command = $HOME/.nix-profile/bin/fish
 
 # Keybinds
 

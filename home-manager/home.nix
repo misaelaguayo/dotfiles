@@ -36,19 +36,4 @@
     yabai
     skhd
   ];
-
-  programs = {
-    nushell = {
-      package = pkgs.nushell.overrideAttrs (oldAttrs: {
-        # temporary workaround. tests failing
-        doCheck = false;
-        doInstallCheck = false;
-      });
-
-      # mac's ~/.config/nushell is a manual symlink into this checkout,
-      # not home-manager managed like it is on the NixOS hosts.
-      configFile = lib.mkForce null;
-      envFile = lib.mkForce null;
-    };
-  };
 }

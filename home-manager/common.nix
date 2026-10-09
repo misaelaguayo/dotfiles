@@ -11,13 +11,11 @@
     nodejs_24
     nix-search-cli
     zellij
-    zoxide
     mergiraf
     delta
     difftastic
     pandoc
     fzf
-    carapace
     (neovim.override {
       withPython3 = true;
       withRuby = false;
@@ -25,19 +23,29 @@
     })
   ];
 
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    CARAPACE_BRIDGES = "zsh,fish,bash,inshellisense";
+  };
+
   programs = {
     direnv = {
       enable = true;
-      enableNushellIntegration = true;
       nix-direnv.enable = true;
     };
 
     home-manager.enable = true;
 
-    nushell = {
+    zoxide.enable = true;
+
+    carapace.enable = true;
+
+    fish = {
       enable = true;
-      configFile.source = ../nushell/config.nu;
-      envFile.source = ../nushell/env.nu;
+      shellInit = ''
+        fish_add_path --prepend --move "$HOME/.nix-profile/bin"
+        fish_add_path --prepend --move "/nix/var/nix/profiles/default/bin"
+      '';
     };
 
     gh = {
@@ -49,8 +57,6 @@
 
     starship = {
       enable = true;
-      # nushell/config.nu already handles init via vendor/autoload
-      enableNushellIntegration = false;
       extraPackages = [ pkgs.starship-jj ];
       settings = {
         custom.jj = {

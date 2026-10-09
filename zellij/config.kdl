@@ -1,3 +1,5 @@
+default_shell "fish"
+
 // Free up Ctrl-n / Ctrl-p / Ctrl-b so terminal apps (nvim completion, fzf/fzf-lua
 // result navigation, etc.) receive them directly instead of zellij intercepting
 // them to switch modes. The same actions are still reachable, just on Alt instead.
