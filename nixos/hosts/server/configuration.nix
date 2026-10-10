@@ -129,7 +129,7 @@
   # Hardware watchdog: if the system fully hangs (e.g. a resource-exhaustion
   # pileup that the midnight cron reboot can't run through), pet /dev/watchdog
   # every ~10s and let it hard-reset the box if nothing pets it for 30s.
-  systemd.watchdog.runtimeTime = "30s";
+  systemd.settings.Manager.RuntimeWatchdogSec = "30s";
 
   # Shared resource pool for the *arr stack (chaptarr/sonarr/radarr/prowlarr).
   # Containers are assigned to this slice via `cgroup_parent` in their
@@ -214,6 +214,12 @@
 	    home.missileserv.lan {
 	      tls internal
 	      reverse_proxy localhost:8123
+	    }
+
+	    # Hermes Agent backend on the desktop 
+	    hermes.missileserv.lan {
+	      tls internal
+	      reverse_proxy desktop.lan:9119
 	    }
 
 	    auth.misaelaguayo.com {
@@ -383,10 +389,6 @@
     options = [
       "bg"
     ];
-  };
-
-  system.autoUpgrade = {
-    enable = true;
   };
 
   # This value determines the NixOS release from which the default

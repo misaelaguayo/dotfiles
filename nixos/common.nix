@@ -22,6 +22,14 @@ in
 
     registry = lib.mapAttrs (_: flake: { inherit flake; }) flakeInputs;
     channel.enable = false;
+
+    gc.automatic = true;
+  };
+
+  # Expire stale GC roots (result links, .direnv, old profile generations)
+  services.angrr = {
+    enable = true;
+    period = "7d";
   };
 
   home-manager.useGlobalPkgs = true;

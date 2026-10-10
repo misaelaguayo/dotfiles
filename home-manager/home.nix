@@ -35,5 +35,6 @@
     ghgrab
     yabai
     skhd
+    firefox
   ];
 }

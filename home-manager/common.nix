@@ -16,6 +16,7 @@
     difftastic
     pandoc
     fzf
+    gcc
     (neovim.override {
       withPython3 = true;
       withRuby = false;
