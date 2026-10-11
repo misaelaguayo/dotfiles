@@ -12,7 +12,6 @@
     nix-search-cli
     zellij
     mergiraf
-    delta
     difftastic
     pandoc
     fzf
@@ -36,6 +35,19 @@
     };
 
     home-manager.enable = true;
+
+    git.enable = true;
+
+    # Unified diffs with syntax highlighting and line numbers; n/N jump
+    # between files in the pager
+    delta = {
+      enable = true;
+      enableGitIntegration = true;
+      options = {
+        navigate = true;
+        line-numbers = true;
+      };
+    };
 
     zoxide.enable = true;
 

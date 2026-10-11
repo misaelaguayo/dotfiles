@@ -8,9 +8,21 @@ let
   steamStop = pkgs.writeShellScript "sunshine-steam-stop" ''
     pkill -x steam || true
   '';
+  # Drop the monitor to 60Hz while streaming so 60fps captures pace evenly
+  setRefresh = rate: pkgs.writeShellScript "sunshine-refresh-${rate}" ''
+    export XDG_RUNTIME_DIR=/run/user/1000
+    export PATH=/etc/profiles/per-user/misael/bin:$PATH
+    export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr" | head -n1)
+    hyprctl keyword monitor "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@${rate},auto,1"
+  '';
+  refreshPrep = {
+    do = "sudo -u misael ${setRefresh "60"}";
+    undo = "sudo -u misael ${setRefresh "144"}";
+  };
 in {
   imports = [
     ./hardware-configuration.nix
+    ./hermes.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -24,6 +36,24 @@ in {
   };
 
   time.timeZone = "America/Chicago";
+
+  # Power off at midnight; the RTC alarm powers the machine back on at 8am.
+  # Needs RTC wake enabled in the BIOS (and ErP/deep sleep off).
+  systemd.services.nightly-poweroff = {
+    description = "Power off for the night and wake at 8am";
+    serviceConfig.Type = "oneshot";
+    path = [ pkgs.util-linux pkgs.coreutils ];
+    script = ''
+      wake=$(date -d 'today 08:00' +%s)
+      [ "$wake" -gt "$(date +%s)" ] || wake=$(date -d 'tomorrow 08:00' +%s)
+      rtcwake -m no -t "$wake"
+      systemctl poweroff
+    '';
+  };
+  systemd.timers.nightly-poweroff = {
+    wantedBy = [ "timers.target" ];
+    timerConfig.OnCalendar = "*-*-* 00:00:00";
+  };
 
   i18n.defaultLocale = "en_US.UTF-8";
 
@@ -49,8 +79,7 @@ in {
   hardware.nvidia = {
     modesetting.enable = true;
     nvidiaPersistenced = true;
-    # RTX 2070 SUPER / Turing
-    open = false;
+    open = true;
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
@@ -103,6 +132,7 @@ in {
       encoder = "nvenc";
       capture = "kms";
       min_log_level = 2;
+      csrf_allowed_origins = "https://desktop.lan:47990,https://192.168.0.190:47990";
     };
     applications = {
       env = {
@@ -116,11 +146,13 @@ in {
       apps = [
         {
           name = "Desktop";
+          prep-cmd = [ refreshPrep ];
           image-path = "desktop.png";
         }
         {
           name = "Steam Big Picture";
           prep-cmd = [
+            refreshPrep
             {
               do = "sudo -u misael ${steamStart}";
               undo = "sudo -u misael ${steamStop}";
@@ -182,7 +214,10 @@ in {
     description = "misael";
     extraGroups = [ "networkmanager" "wheel" "video" "render" "uinput" "input" ];
     packages = with pkgs; [
-      neovim
+      (neovim.override {
+        withPython3 = true;
+        python3 = python311;
+      })
       jujutsu
       zellij
       claude-code

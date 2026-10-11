@@ -5,6 +5,7 @@ email = "maguayo@armlend.com"
 [ui]
 diff-editor = ["nvim", "-c", "DiffEditor $left $right $output"]
 diff-formatter = "difft"
+pager = "delta"
 merge-editor = "mergiraf"
 conflict-marker-style = "git"
 

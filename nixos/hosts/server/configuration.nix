@@ -216,7 +216,6 @@
 	      reverse_proxy localhost:8123
 	    }
 
-	    # Hermes Agent backend on the desktop 
 	    hermes.missileserv.lan {
 	      tls internal
 	      reverse_proxy desktop.lan:9119

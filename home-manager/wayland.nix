@@ -16,7 +16,10 @@
   wayland.windowManager.hyprland = {
     enable = true;
     settings = {
-      monitor = ",preferred,auto,1";
+      monitor = [
+        "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@144,auto,1"
+        ",preferred,auto,1"
+      ];
 
       "$mod" = "ALT";
       "$terminal" = "ghostty";
@@ -89,7 +92,6 @@
       };
 
       dwindle = {
-        pseudotile     = true;
         preserve_split = true;
       };
 
@@ -151,11 +153,11 @@
         "$mod, mouse:273, resizewindow"
       ];
 
-      windowrulev2 = [
-        "float, class:^(steam)$, title:^((?!.*Steam).*)"
-        "float, class:^(pavucontrol)$"
-        "float, class:^(nm-connection-editor)$"
-        "suppressevent maximize, class:.*"
+      windowrule = [
+        "float on, match:class ^(steam)$, match:title negative:^(Steam)$"
+        "float on, match:class ^(pavucontrol)$"
+        "float on, match:class ^(nm-connection-editor)$"
+        "suppress_event maximize, match:class .*"
       ];
     };
   };
