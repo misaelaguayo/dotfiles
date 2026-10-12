@@ -1,5 +1,7 @@
+require("config.options")
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
     vim.fn.system({
         "git",
         "clone",
@@ -21,22 +23,21 @@ require("lazy").setup({
     },
 })
 
-require("mappings")
-require("theme")
-require("lsp")
-require("snips")
+require("config.keymaps")
+require("config.autocmds")
+require("config.theme")
 
 -- `:source $MYVIMRC` re-runs this file, including the `lazy.setup()` call
 -- above, which lazy.nvim explicitly refuses to redo mid-session ("Re-sourcing
 -- your config is not supported with lazy.nvim"). It also wouldn't help
 -- anyway: require()'d modules are cached in package.loaded on first load, so
--- edits to mappings.lua/theme.lua/etc never re-run on a plain re-source.
+-- edits to lua/config/* never re-run on a plain re-source.
 -- Reload just those modules directly instead, skipping lazy entirely.
 vim.api.nvim_create_user_command("ReloadConfig", function()
-    local config_lua = vim.fn.stdpath("config") .. "/lua/"
-    for _, name in ipairs({ "mappings", "theme", "lsp", "snips" }) do
-        package.loaded[name] = nil
-        dofile(config_lua .. name .. ".lua")
+    package.loaded["jj"] = nil
+    for _, file in ipairs(vim.fn.glob(vim.fn.stdpath("config") .. "/lua/config/*.lua", false, true)) do
+        package.loaded["config." .. vim.fn.fnamemodify(file, ":t:r")] = nil
+        dofile(file)
     end
     vim.notify("Config reloaded", vim.log.levels.INFO)
 end, {})

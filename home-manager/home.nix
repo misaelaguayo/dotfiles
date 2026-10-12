@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [ ./common.nix ];
@@ -14,8 +14,13 @@
 
   fonts.fontconfig.enable = true;
 
-  home.username = builtins.getEnv "USER";
-  home.homeDirectory = builtins.getEnv "HOME";
+  # fixed rather than read from $USER/$HOME: flakes evaluate purely, where
+  # getEnv always returns ""
+  home.username = "misaelaguayo";
+  home.homeDirectory = "/Users/misaelaguayo";
+
+  xdg.configFile."ghostty/config".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/dotfiles/ghostty/config";
 
   home.packages = with pkgs; [
     nerd-fonts.hack

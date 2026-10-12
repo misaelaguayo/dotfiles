@@ -1,8 +1,0 @@
-windows:
-  - name: IDE
-    root: ~/
-    layout: 17ca,275x74,0,0[275x56,0,0,7,275x17,0,57{137x17,0,57,8,137x17,138,57,9}]
-    panes:
-      - lvim
-      - git status
-      - git status

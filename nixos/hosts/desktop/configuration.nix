@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 
 let
   steamStart = pkgs.writeShellScript "sunshine-steam-start" ''
@@ -227,6 +227,30 @@ in {
   home-manager.users.misael = import ../../../home-manager/desktop.nix;
 
   hardware.uinput.enable = true;
+
+  # RGB: Corsair Lighting Node Core (case), Harpoon mouse, GMMK Pro keyboard,
+  # and the board/RAM over SMBus ("intel" loads i2c-dev + i2c-i801 for that).
+  services.hardware.openrgb = {
+    enable = true;
+    motherboard = "intel";
+  };
+
+  # Lights off at boot: once the OpenRGB server is up and has finished
+  # detecting devices, set every device it found to black.
+  systemd.services.lights-off = {
+    description = "Turn off RGB lighting";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "openrgb.service" ];
+    requires = [ "openrgb.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      # device detection takes a few seconds after the server starts
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 10";
+      # --client takes an optional address and would swallow a following
+      # flag, so give it one explicitly
+      ExecStart = "${config.services.hardware.openrgb.package}/bin/openrgb --client 127.0.0.1:${toString config.services.hardware.openrgb.server.port} --color 000000";
+    };
+  };
 
   boot.kernel.sysctl."vm.max_map_count" = 2147483642;
 

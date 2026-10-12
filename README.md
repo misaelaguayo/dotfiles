@@ -17,8 +17,10 @@
   - My favorite VCS
 - Nixos
   - Nix OS-specific config
-- Nushell
-  - Shell which prioritizes readability
+- Fish
+  - Shell, with starship, atuin, zoxide and carapace
+- Hyprland
+  - Wayland compositor (configured in `home-manager/wayland.nix`)
 - Waybar
   - Status bar for Hyprland
 - Zellij

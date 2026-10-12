@@ -10,6 +10,7 @@ in
 {
   imports = [
     inputs.home-manager.nixosModules.home-manager
+    ./stylix.nix
   ];
 
   nix = {
@@ -34,6 +35,7 @@ in
 
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+  home-manager.backupFileExtension = "hm-bak";
 
   nixpkgs.overlays = [ (import ../home-manager/overlay.nix) ];
   nixpkgs.config.allowUnfree = true;

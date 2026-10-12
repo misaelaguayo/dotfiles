@@ -1,7 +1,19 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  # Out-of-store links point straight at the checkout, so edits to these
+  # configs take effect immediately without a rebuild.
+  dotfiles = "${config.home.homeDirectory}/Projects/dotfiles";
+  link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
+in
 {
   home.stateVersion = "23.11";
+
+  xdg.configFile = {
+    "nvim".source = link "nvim";
+    "jj/config.toml".source = link "jj/config.toml";
+    "zellij/config.kdl".source = link "zellij/config.kdl";
+  };
 
   home.packages = with pkgs; [
     ripgrep
@@ -15,6 +27,12 @@
     difftastic
     pandoc
     fzf
+    fd
+    nixd
+    nixfmt
+    nh
+    jjui
+    tree-sitter # nvim-treesitter (main) compiles parsers with it
     gcc
     (neovim.override {
       withPython3 = true;
@@ -50,6 +68,12 @@
     };
 
     zoxide.enable = true;
+
+    # a program module rather than a bare package so Stylix can theme it
+    bat.enable = true;
+
+    # searchable shell history; `atuin login` once per machine to sync
+    atuin.enable = true;
 
     carapace.enable = true;
 

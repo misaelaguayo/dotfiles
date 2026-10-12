@@ -1,16 +1,19 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  c = config.lib.stylix.colors;
+in
 {
   home.packages = with pkgs; [
-    ghostty
     hyprpaper
-    rofi
     grim
     slurp
     wl-clipboard
     wlr-randr
     libnotify
     pavucontrol
+    playerctl
+    cliphist
   ];
 
   wayland.windowManager.hyprland = {
@@ -21,7 +24,7 @@
         ",preferred,auto,1"
       ];
 
-      "$mod" = "ALT";
+      "$mod" = "SUPER";
       "$terminal" = "ghostty";
       "$menu" = "rofi -show drun";
 
@@ -29,6 +32,7 @@
         "hyprpaper"
         "waybar"
         "xhost +local:"
+        "wl-paste --watch cliphist store"
       ];
 
       env = [
@@ -40,8 +44,8 @@
         gaps_in  = 5;
         gaps_out = 15;
         border_size = 2;
-        "col.active_border"   = "rgba(cba6f7ff) rgba(89b4faff) 45deg";
-        "col.inactive_border" = "rgba(313244aa)";
+        "col.active_border"   = lib.mkForce "rgba(${c.base0E}ff) rgba(${c.base0D}ff) 45deg";
+        "col.inactive_border" = lib.mkForce "rgba(${c.base01}aa)";
         resize_on_border = true;
         layout = "dwindle";
       };
@@ -62,7 +66,7 @@
           enabled      = true;
           range        = 8;
           render_power = 2;
-          color        = "rgba(1e1e2e99)";
+          color        = lib.mkForce "rgba(${c.base00}99)";
         };
       };
 
@@ -91,6 +95,8 @@
         accel_profile = "flat";
       };
 
+      binds.workspace_back_and_forth = true;
+
       dwindle = {
         preserve_split = true;
       };
@@ -106,6 +112,7 @@
         "$mod,       R,      exec,          $menu"
         "$mod,       F,      fullscreen"
         "$mod,       V,      togglefloating"
+        "$mod,       C,      exec,          cliphist list | rofi -dmenu -p clipboard | cliphist decode | wl-copy"
         "$mod SHIFT, E,      exit"
 
         # Focus
@@ -113,12 +120,20 @@
         "$mod, right, movefocus, r"
         "$mod, up,    movefocus, u"
         "$mod, down,  movefocus, d"
+        "$mod, h,     movefocus, l"
+        "$mod, l,     movefocus, r"
+        "$mod, k,     movefocus, u"
+        "$mod, j,     movefocus, d"
 
         # Move windows
         "$mod SHIFT, left,  movewindow, l"
         "$mod SHIFT, right, movewindow, r"
         "$mod SHIFT, up,    movewindow, u"
         "$mod SHIFT, down,  movewindow, d"
+        "$mod SHIFT, h,     movewindow, l"
+        "$mod SHIFT, l,     movewindow, r"
+        "$mod SHIFT, k,     movewindow, u"
+        "$mod SHIFT, j,     movewindow, d"
 
         # Workspaces
         "$mod, 1, workspace, 1"
@@ -147,6 +162,27 @@
         "$mod, Print, exec, grim - | wl-copy"
       ];
 
+      # repeat while held
+      binde = [
+        "$mod CTRL, h, resizeactive, -40 0"
+        "$mod CTRL, l, resizeactive, 40 0"
+        "$mod CTRL, k, resizeactive, 0 -40"
+        "$mod CTRL, j, resizeactive, 0 40"
+      ];
+
+      # media keys: e = repeat while held, l = also works while locked
+      bindel = [
+        ", XF86AudioRaiseVolume, exec, wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"
+        ", XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+      ];
+      bindl = [
+        ", XF86AudioMute,    exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        ", XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+        ", XF86AudioPlay,    exec, playerctl play-pause"
+        ", XF86AudioNext,    exec, playerctl next"
+        ", XF86AudioPrev,    exec, playerctl previous"
+      ];
+
       # Super+LMB to move, Super+RMB to resize
       bindm = [
         "$mod, mouse:272, movewindow"
@@ -162,20 +198,37 @@
     };
   };
 
+  # colors and font come from Stylix
   services.mako = {
     enable = true;
     settings = {
-      background-color = "#1e1e2e";
-      text-color       = "#cdd6f4";
-      border-color     = "#cba6f7";
       border-radius    = 8;
       border-size      = 2;
       default-timeout  = 5000;
-      font             = "Hack Nerd Font 12";
       padding          = "12";
       margin           = "12";
     };
   };
+
+  programs.rofi.enable = true;
+
+  # colors and font come from Stylix
+  programs.ghostty = {
+    enable = true;
+    settings = {
+      command = "${config.programs.fish.package}/bin/fish";
+      font-thicken = true;
+      grapheme-width-method = "unicode";
+      unfocused-split-opacity = 0.8;
+      window-decoration = true;
+      keybind = "ctrl+shift+j=write_scrollback_file:open";
+      shell-integration-features = "sudo,ssh-terminfo,ssh-env";
+    };
+  };
+
+  # the waybar CSS below is hand-written; feed it Stylix's colors instead of
+  # letting Stylix replace it with its own stylesheet
+  stylix.targets.waybar.enable = false;
 
   programs.waybar = {
     enable = true;
@@ -245,21 +298,21 @@
     };
 
     style = ''
-      @define-color base     #1e1e2e;
-      @define-color surface0 #313244;
-      @define-color surface1 #45475a;
-      @define-color overlay0 #6c7086;
-      @define-color text     #cdd6f4;
-      @define-color subtext0 #a6adc8;
-      @define-color blue     #89b4fa;
-      @define-color sapphire #74c7ec;
-      @define-color green    #a6e3a1;
-      @define-color yellow   #f9e2af;
-      @define-color mauve    #cba6f7;
-      @define-color red      #f38ba8;
+      @define-color base     #${c.base00};
+      @define-color surface0 #${c.base01};
+      @define-color surface1 #${c.base02};
+      @define-color overlay0 #${c.base03};
+      @define-color text     #${c.base05};
+      @define-color subtext0 #${c.base04};
+      @define-color blue     #${c.base0D};
+      @define-color sapphire #${c.base0C};
+      @define-color green    #${c.base0B};
+      @define-color yellow   #${c.base0A};
+      @define-color mauve    #${c.base0E};
+      @define-color red      #${c.base08};
 
       * {
-        font-family: "Hack Nerd Font", monospace;
+        font-family: "${config.stylix.fonts.monospace.name}", monospace;
         font-size: 13px;
         border: none;
         border-radius: 0;
