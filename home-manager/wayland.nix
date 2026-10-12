@@ -104,6 +104,8 @@ in
       misc = {
         force_default_wallpaper = 0;
         disable_hyprland_logo   = true;
+        # Variable refresh rate for fullscreen apps (games) only
+        vrr                     = 2;
       };
 
       bind = [

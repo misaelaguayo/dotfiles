@@ -1,8 +1,10 @@
 # Shared base configuration imported by every host in flake.nix.
 
-{ inputs
-, lib
-, ...
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
 }:
 let
   flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
@@ -10,13 +12,18 @@ in
 {
   imports = [
     inputs.home-manager.nixosModules.home-manager
+    inputs.agenix.nixosModules.default
     ./stylix.nix
   ];
 
+  environment.systemPackages = [ inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+
   nix = {
     settings = {
-      # Enable flakes and new 'nix' command
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
 
       nix-path = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
     };

@@ -7,7 +7,12 @@
 # The 27B dense model scores higher but its 4-bit build (16.5 GB) can't fit in
 # VRAM, and spilling dense layers makes it several times slower.
 
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 let
   llamaPort = 8080;
   modelAlias = "qwen3.6-35b-a3b";
@@ -52,6 +57,8 @@ in
     };
   };
 
+  systemd.services.llama-cpp.wantedBy = lib.mkForce [ ];
+
   home-manager.sharedModules = [ inputs.hermes-agent.homeManagerModules.default ];
 
   # Keep the hermes-backend user service running without a login session
@@ -91,8 +98,18 @@ in
           trusted_proxies = [ missileservIP ];
         };
       };
-      mcpServers.nixos = {
-        command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+      mcpServers = {
+        nixos = {
+          command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+        };
+        angular-cli = {
+          command = "npx";
+          args = [
+            "-y"
+            "@angular/cli"
+            "mcp"
+          ];
+        };
       };
     };
   };

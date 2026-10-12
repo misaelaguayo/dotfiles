@@ -23,6 +23,7 @@ in {
   imports = [
     ./hardware-configuration.nix
     ./hermes.nix
+    ./nas.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
