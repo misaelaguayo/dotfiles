@@ -13,7 +13,7 @@
   "dressing.nvim": { "branch": "master", "commit": "2d7c2db2507fa3c4956142ee607431ddb2828639" },
   "edgy.nvim": { "branch": "main", "commit": "8bfd2808994a988c975694122f68624b8a219f5f" },
   "fugitive-core.nvim": { "branch": "main", "commit": "3bab6bdcac1ebf757f2789dc059fb8a34009e8f3" },
-  "fzf-lua": { "branch": "main", "commit": "6995a3f8ba256a7a9949747ffbdf5a88eb8a3697" },
+  "fzf-lua": { "branch": "main", "commit": "ce788d5acb83628c66f6639920ec0f36576646d7" },
   "gitsigns.nvim": { "branch": "main", "commit": "fd780920613e541cbdfac41bf711583ed49f9249" },
   "gruvbox.nvim": { "branch": "main", "commit": "154eb5ff5b96d0641307113fa385eaf0d36d9796" },
   "hunk.nvim": { "branch": "master", "commit": "c8a8e7b6973576f63e5bf39aa8338d7f37f4dc53" },

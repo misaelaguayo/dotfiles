@@ -14,11 +14,6 @@
 
   fonts.fontconfig.enable = true;
 
-  # fixed rather than read from $USER/$HOME: flakes evaluate purely, where
-  # getEnv always returns ""
-  home.username = "misael";
-  home.homeDirectory = "/Users/misael";
-
   xdg.configFile."ghostty/config".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/dotfiles/ghostty/config";
 
