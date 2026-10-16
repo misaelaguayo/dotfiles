@@ -13,7 +13,16 @@ end
 return {
     {
         "mfussenegger/nvim-dap",
+        dependencies = {
+            "rcarriga/nvim-dap-ui",
+            "nvim-neotest/nvim-nio",
+            -- variable values inline while stepping
+            { "theHamsta/nvim-dap-virtual-text", opts = {} },
+        },
         keys = {
+            -- load dap first: its config sets up dapui, and requiring dapui on its
+            -- own would load nvim-dap mid-require and loop
+            { "<space>du", function() require("dap"); require("dapui").toggle() end, desc = "Debug: toggle UI" },
             { "<space>n", dap("new"), desc = "Debug: new session" },
             { "<space>dc", dap("continue"), desc = "Debug: continue" },
             { "<space>t", dap("toggle_breakpoint"), desc = "Debug: toggle breakpoint" },
@@ -35,6 +44,15 @@ return {
         },
         config = function()
             local d = require("dap")
+
+            -- variables / stack / watches / breakpoints panels, opened and
+            -- closed with each debug session
+            local dapui = require("dapui")
+            dapui.setup()
+            d.listeners.before.attach.dapui_config = dapui.open
+            d.listeners.before.launch.dapui_config = dapui.open
+            d.listeners.before.event_terminated.dapui_config = dapui.close
+            d.listeners.before.event_exited.dapui_config = dapui.close
 
             d.adapters.coreclr = {
                 type = "executable",

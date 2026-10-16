@@ -30,6 +30,99 @@ return {
             })
         end,
     },
+    -- main-branch rewrite: no `configs` module, keymaps are set by hand
+    {
+        "nvim-treesitter/nvim-treesitter-textobjects",
+        branch = "main",
+        event = "VeryLazy",
+        config = function()
+            require("nvim-treesitter-textobjects").setup({
+                select = { lookahead = true },
+                move = { set_jumps = true },
+            })
+
+            local select = require("nvim-treesitter-textobjects.select")
+            for lhs, query in pairs({
+                af = "@function.outer",
+                ["if"] = "@function.inner",
+                ac = "@class.outer",
+                ic = "@class.inner",
+                aa = "@parameter.outer",
+                ia = "@parameter.inner",
+            }) do
+                vim.keymap.set({ "x", "o" }, lhs, function()
+                    select.select_textobject(query, "textobjects")
+                end, { desc = "Select " .. query })
+            end
+
+            local move = require("nvim-treesitter-textobjects.move")
+            vim.keymap.set({ "n", "x", "o" }, "]f", function()
+                move.goto_next_start("@function.outer", "textobjects")
+            end, { desc = "Next function" })
+            vim.keymap.set({ "n", "x", "o" }, "[f", function()
+                move.goto_previous_start("@function.outer", "textobjects")
+            end, { desc = "Prev function" })
+        end,
+    },
+    {
+        "stevearc/conform.nvim",
+        event = "BufWritePre",
+        cmd = { "ConformInfo", "FormatToggle" },
+        keys = {
+            { "<space>f", function() require("conform").format({ async = true }) end, mode = { "n", "v" }, desc = "Format" },
+            { "<space>uf", "<cmd>FormatToggle<CR>", desc = "Toggle format on save" },
+        },
+        opts = {
+            -- anything not listed falls back to the language server's formatter
+            formatters_by_ft = {
+                rust = { "rustfmt" },
+                nix = { "nixfmt" },
+            },
+            default_format_opts = { lsp_format = "fallback" },
+            format_on_save = function(bufnr)
+                if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+                    return
+                end
+                return { timeout_ms = 1000 }
+            end,
+        },
+        config = function(_, opts)
+            require("conform").setup(opts)
+            vim.api.nvim_create_user_command("FormatToggle", function()
+                vim.g.disable_autoformat = not vim.g.disable_autoformat
+                vim.notify("Format on save " .. (vim.g.disable_autoformat and "off" or "on"))
+            end, {})
+        end,
+    },
+    -- project-wide search and replace panel
+    {
+        "MagicDuck/grug-far.nvim",
+        cmd = "GrugFar",
+        keys = {
+            {
+                "<space>sr",
+                function() require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end,
+                desc = "Search and replace (word)",
+            },
+            {
+                "<space>sr",
+                function() require("grug-far").with_visual_selection() end,
+                mode = "x",
+                desc = "Search and replace (selection)",
+            },
+        },
+        opts = {},
+    },
+    -- only the `words` module: highlights LSP references to the symbol under
+    -- the cursor; ]] / [[ to jump between them are set in LspAttach
+    {
+        "folke/snacks.nvim",
+        priority = 1000,
+        lazy = false,
+        opts = {
+            words = { enabled = true },
+        },
+    },
     {
         "kevinhwang91/nvim-ufo",
         dependencies = { "kevinhwang91/promise-async" },

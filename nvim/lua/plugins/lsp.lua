@@ -79,6 +79,11 @@ return {
             require("roslyn").setup({})
         end,
     },
+    -- VS Code-style peek popup (gp / gR, set in LspAttach)
+    { "dnlhc/glance.nvim", cmd = "Glance", opts = {} },
+    -- live preview for <space>rn; loaded on LspAttach so the command preview
+    -- works the first time (a lazy cmd stub wouldn't preview)
+    { "smjonas/inc-rename.nvim", event = "LspAttach", opts = {} },
     {
         "folke/lazydev.nvim",
         ft = "lua", -- only load on lua files

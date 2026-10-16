@@ -7,6 +7,10 @@ map("n", "<CR>", "<cmd>noh<CR><CR>", { desc = "Clear search highlight" })
 map("n", "<Leader>w", "<cmd>set wrap!<CR>", { desc = "Toggle wrap" })
 map("n", "<Leader>c", "<cmd>cclose<CR>", { desc = "Close quickfix" })
 
+-- move selected lines, reselect and reindent so it can be repeated
+map("x", "J", ":m '>+1<CR>gv=gv", { desc = "Move selection down", silent = true })
+map("x", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up", silent = true })
+
 -- buffers
 map("n", "<space>bd", "<cmd>bdelete<CR>", { desc = "Delete buffer" })
 map("n", "<space>bn", "<cmd>bnext<CR>", { desc = "Next buffer" })
