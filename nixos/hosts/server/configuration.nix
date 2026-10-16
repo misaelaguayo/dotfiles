@@ -379,10 +379,13 @@
 
   # Single-node k3s for learning/experimentation alongside the docker
   # compose stack. Traefik is disabled since Caddy already owns 80/443.
+  # NodePorts only listen on localhost (the firewall is off), so apps are
+  # reachable solely through Caddy's forward_auth, like the compose
+  # 127.0.0.1:X port bindings.
   services.k3s = {
     enable = true;
     role = "server";
-    extraFlags = "--disable=traefik";
+    extraFlags = "--disable=traefik --kube-proxy-arg=nodeport-addresses=127.0.0.1/32";
   };
 
   # Wait for nas to be mounted before starting containers which depend on its data
