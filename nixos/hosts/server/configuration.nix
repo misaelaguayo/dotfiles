@@ -385,16 +385,6 @@
     extraFlags = "--disable=traefik";
   };
 
-  # Symlink each manifest from the dotfiles repo into k3s's built-in
-  # auto-deploy directory - same idea as /etc/nixos/configuration.nix
-  # being a symlink into this repo, but k3s reconciles on every file
-  # change with no rebuild step. Add one L+ line per new manifest file.
-  systemd.tmpfiles.rules = [
-    "L+ /var/lib/rancher/k3s/server/manifests/00-namespace-media.yaml - - - - /home/missileserv/Projects/dotfiles/k8s/manifests/00-namespace-media.yaml"
-    "L+ /var/lib/rancher/k3s/server/manifests/05-intel-gpu-plugin.yaml - - - - /home/missileserv/Projects/dotfiles/k8s/manifests/05-intel-gpu-plugin.yaml"
-    "L+ /var/lib/rancher/k3s/server/manifests/10-tdarr.yaml - - - - /home/missileserv/Projects/dotfiles/k8s/manifests/10-tdarr.yaml"
-  ];
-
   # Wait for nas to be mounted before starting containers which depend on its data
   systemd.services.docker = {
     after = [ "mnt-media.mount" ];
