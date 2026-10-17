@@ -238,7 +238,7 @@
 	            uri /outpost.goauthentik.io/auth/caddy
 	            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 	          }
-	          reverse_proxy localhost:9101
+	          reverse_proxy 127.0.0.1:30101
 	        }
 
 	        handle_path /torrent* {
@@ -295,16 +295,16 @@
 		      reverse_proxy 127.0.0.1:30500
 		    }
 
-		    handle /prometheus* {
+		    handle_path /prometheus* {
 		      forward_auth localhost:9000 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:9090
+		      reverse_proxy 127.0.0.1:30909
 		    }
 
 		    handle /grafana* {
-		      reverse_proxy localhost:3000
+		      reverse_proxy 127.0.0.1:30300
 		    }
 
 		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
@@ -335,7 +335,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:3010
+		      reverse_proxy 127.0.0.1:30010
 		    }
 	    }
     '';
