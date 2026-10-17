@@ -223,18 +223,18 @@
 
 	    auth.misaelaguayo.com {
 	      tls internal
-	      reverse_proxy localhost:9000
+	      reverse_proxy 127.0.0.1:30900
 	    }
 
 	    missileserv missileserv.lan {
 	        tls internal
 
 	        handle /outpost.goauthentik.io/* {
-	          reverse_proxy localhost:9000
+	          reverse_proxy 127.0.0.1:30900
 	        }
 
 	        handle /smokeping* {
-	          forward_auth localhost:9000 {
+	          forward_auth 127.0.0.1:30900 {
 	            uri /outpost.goauthentik.io/auth/caddy
 	            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 	          }
@@ -242,7 +242,7 @@
 	        }
 
 	        handle_path /torrent* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -250,7 +250,7 @@
 		    }
 
 		    handle /radarr* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -258,7 +258,7 @@
 		    }
 
 		    handle /sonarr* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -266,7 +266,7 @@
 		    }
 
 		    handle /chaptarr* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -274,7 +274,7 @@
 		    }
 
 		    handle /prowlarr* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -282,7 +282,7 @@
 		    }
 
 		    handle /kapowarr* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -296,7 +296,7 @@
 		    }
 
 		    handle_path /prometheus* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -310,7 +310,7 @@
 		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
 		    # ::1, so k8s upstreams use the IPv4 address, not localhost.
 		    handle /argocd* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -321,7 +321,7 @@
 		    # API paths, so it needs the trailing slash.
 		    redir /learning /learning/
 		    handle_path /learning/* {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
@@ -331,7 +331,7 @@
 		    # catch-all: dashboard linking out to everything above. Must stay
 		    # last so it doesn't shadow the more specific handles.
 		    handle {
-		      forward_auth localhost:9000 {
+		      forward_auth 127.0.0.1:30900 {
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
