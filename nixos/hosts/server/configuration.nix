@@ -325,7 +325,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:3020
+		      reverse_proxy 127.0.0.1:30020
 		    }
 
 		    # catch-all: dashboard linking out to everything above. Must stay
