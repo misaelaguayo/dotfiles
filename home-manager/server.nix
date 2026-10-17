@@ -8,6 +8,7 @@
 
   home.packages = with pkgs; [
     docker-compose
+    kubeseal
   ];
 
   # k3s's bundled kubectl ignores ~/.kube/config unless this is set
