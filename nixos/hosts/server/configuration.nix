@@ -246,7 +246,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:8080
+		      reverse_proxy 127.0.0.1:30808
 		    }
 
 		    handle /radarr* {
@@ -254,7 +254,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:7878
+		      reverse_proxy 127.0.0.1:30878
 		    }
 
 		    handle /sonarr* {
@@ -262,7 +262,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:8989
+		      reverse_proxy 127.0.0.1:30989
 		    }
 
 		    handle /chaptarr* {
@@ -270,7 +270,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:8789
+		      reverse_proxy 127.0.0.1:30789
 		    }
 
 		    handle /prowlarr* {
@@ -278,7 +278,7 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:9696
+		      reverse_proxy 127.0.0.1:30696
 		    }
 
 		    handle /kapowarr* {
@@ -286,13 +286,13 @@
 		        uri /outpost.goauthentik.io/auth/caddy
 		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
 		      }
-		      reverse_proxy localhost:5656
+		      reverse_proxy 127.0.0.1:30656
 		    }
 
 		    # Kavita has its own OIDC login against Authentik, so it
 		    # skips the forward_auth gate (same as home/grafana).
 		    handle /kavita* {
-		      reverse_proxy localhost:5000
+		      reverse_proxy 127.0.0.1:30500
 		    }
 
 		    handle /prometheus* {
