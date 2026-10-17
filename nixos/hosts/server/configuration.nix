@@ -307,6 +307,16 @@
 		      reverse_proxy localhost:3000
 		    }
 
+		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
+		    # ::1, so k8s upstreams use the IPv4 address, not localhost.
+		    handle /argocd* {
+		      forward_auth localhost:9000 {
+		        uri /outpost.goauthentik.io/auth/caddy
+		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+		      }
+		      reverse_proxy 127.0.0.1:30080
+		    }
+
 		    # Reading tracker (~/Projects/learning). The page uses relative
 		    # API paths, so it needs the trailing slash.
 		    redir /learning /learning/
