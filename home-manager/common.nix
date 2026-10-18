@@ -32,6 +32,7 @@ in
     nixfmt
     nh
     jjui
+    lazyjj
     tree-sitter # nvim-treesitter (main) compiles parsers with it
     gcc
     (neovim.override {

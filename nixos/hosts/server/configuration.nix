@@ -328,6 +328,15 @@
 		      reverse_proxy 127.0.0.1:30020
 		    }
 
+		    # Readeck (k3s). No forward_auth: Readeck signs in via Authentik
+		    # OIDC itself, and its API (browser extension, apps) uses tokens
+		    # that forward_auth would block. Served under its /readeck/ prefix,
+		    # so handle (not handle_path).
+		    redir /readeck /readeck/
+		    handle /readeck/* {
+		      reverse_proxy 127.0.0.1:30800
+		    }
+
 		    # catch-all: dashboard linking out to everything above. Must stay
 		    # last so it doesn't shadow the more specific handles.
 		    handle {

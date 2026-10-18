@@ -20,6 +20,10 @@ conflict-marker-style = "git"
 [merge-tools.difft]
 diff-args = ["--color=always", "--display=side-by-side", "$left", "$right"]
 
+[lazyjj]
+# lazyjj ignores ui.diff-formatter, so point it at difftastic explicitly
+diff-tool = "difft"
+
 [revset-aliases]
 "immutable_heads()" = "builtin_immutable_heads() | remote_bookmarks()"
 
