@@ -3,6 +3,7 @@
 vim.opt.wrap = false
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
+vim.opt.diffopt:append("algorithm:histogram")
 vim.opt.background = "dark"
 vim.opt.number = true
 vim.opt.fixeol = false

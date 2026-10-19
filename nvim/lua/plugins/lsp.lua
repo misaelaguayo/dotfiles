@@ -20,6 +20,8 @@ return {
                 automatic_enable = {
                     exclude = {
                         "lua_ls",
+                        -- conform runs oxfmt only in projects that configure it
+                        "oxfmt",
                         "roslyn_ls",
                         "rust_analyzer",
                     },

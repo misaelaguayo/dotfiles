@@ -1,3 +1,38 @@
+local function jj_commit_id(rev)
+    local res = vim.system({ "jj", "log", "-r", rev, "--no-graph", "-T", "commit_id" }, { text = true }):wait()
+    if res.code ~= 0 then
+        vim.notify("jj: " .. (res.stderr or ""), vim.log.levels.ERROR)
+        return nil
+    end
+    return vim.trim(res.stdout)
+end
+
+local function review_working_copy()
+    if not vim.fs.root(0, ".jj") then
+        vim.cmd("DiffviewOpen")
+        return
+    end
+    local parent = jj_commit_id("@-")
+    if parent then
+        vim.cmd("DiffviewOpen " .. parent)
+    end
+end
+
+local function review_log_rev()
+    local rev_lines = vim.b.jj_log_rev_lines or {}
+    local line = vim.api.nvim_win_get_cursor(0)[1]
+    for i = line, 1, -1 do
+        local rev = rev_lines[tostring(i)]
+        if rev then
+            local commit = jj_commit_id(rev)
+            if commit then
+                vim.cmd("DiffviewOpen " .. commit .. "^!")
+            end
+            return
+        end
+    end
+end
+
 return {
     {
         "lewis6991/gitsigns.nvim",
@@ -25,7 +60,8 @@ return {
         cmd = { "J" },
         keys = {
             { "<space>gg", "<cmd>J<CR>", desc = "jj log" },
-            { "<space>gs", "<cmd>J status<CR>", desc = "jj status" },
+            { "<space>gs", review_working_copy, desc = "Review working copy" },
+            { "<space>gS", "<cmd>J status<CR>", desc = "jj status" },
             { "<space>gd", "<cmd>J diff<CR>", desc = "jj diff" },
         },
         config = function()
@@ -44,6 +80,13 @@ return {
                 opts.split_cmd = opts.split_cmd or "vsplit"
                 return open_pane(opts)
             end
+            vim.api.nvim_create_autocmd("BufEnter", {
+                group = vim.api.nvim_create_augroup("UserJjLog", { clear = true }),
+                pattern = "jj-log*",
+                callback = function(ev)
+                    vim.keymap.set("n", "gd", review_log_rev, { buffer = ev.buf, desc = "Review revision" })
+                end,
+            })
         end,
     },
     -- `jj split`/`jj diffedit` editor (ui.diff-editor in jj/config.toml)
@@ -68,5 +111,19 @@ return {
     -- in ~/.config/jj/config.toml).
     { "whiteinge/diffconflicts", cmd = { "DiffConflicts", "DiffConflictsWithHistory" } },
     "tpope/vim-fugitive",
-    "sindrets/diffview.nvim",
+    {
+        "sindrets/diffview.nvim",
+        cmd = { "DiffviewOpen", "DiffviewFileHistory" },
+        opts = function()
+            local close = { "n", "q", "<cmd>DiffviewClose<CR>", { desc = "Close diffview" } }
+            return {
+                enhanced_diff_hl = true,
+                keymaps = {
+                    view = { close },
+                    file_panel = { close },
+                    file_history_panel = { close },
+                },
+            }
+        end,
+    },
 }

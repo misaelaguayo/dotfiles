@@ -19,11 +19,16 @@ return {
                 "nix",
             })
 
+            -- c_sharp ships no indents query (new lines stay at the previous
+            -- line's indent) and the typescript one misfires on the ERROR nodes
+            -- left by half-typed code; nvim's runtime indent/*.vim handle both
+            local builtin_indent = { cs = true, typescript = true, typescriptreact = true }
+
             vim.api.nvim_create_autocmd("FileType", {
                 group = vim.api.nvim_create_augroup("UserTreesitter", { clear = true }),
                 callback = function(ev)
                     -- fails quietly for filetypes with no installed parser
-                    if pcall(vim.treesitter.start, ev.buf) then
+                    if pcall(vim.treesitter.start, ev.buf) and not builtin_indent[ev.match] then
                         vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
                     end
                 end,
@@ -72,20 +77,37 @@ return {
             { "<space>f", function() require("conform").format({ async = true }) end, mode = { "n", "v" }, desc = "Format" },
             { "<space>uf", "<cmd>FormatToggle<CR>", desc = "Toggle format on save" },
         },
-        opts = {
-            -- anything not listed falls back to the language server's formatter
-            formatters_by_ft = {
-                rust = { "rustfmt" },
-                nix = { "nixfmt" },
-            },
-            default_format_opts = { lsp_format = "fallback" },
-            format_on_save = function(bufnr)
-                if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-                    return
-                end
-                return { timeout_ms = 1000 }
-            end,
-        },
+        opts = function()
+            -- use whichever formatter the project configures; with no config, leave the file alone
+            -- rather than letting ts_ls/yamlls apply their own defaults
+            local web = { "biome", "oxfmt", "prettier", stop_after_first = true, lsp_format = "never" }
+            local yaml = { "oxfmt", "prettier", stop_after_first = true, lsp_format = "never" }
+            return {
+                -- anything not listed falls back to the language server's formatter
+                formatters_by_ft = {
+                    rust = { "rustfmt" },
+                    nix = { "nixfmt" },
+                    javascript = web,
+                    javascriptreact = web,
+                    typescript = web,
+                    typescriptreact = web,
+                    yaml = yaml,
+                },
+                -- only run when the project has a config file for the formatter
+                formatters = {
+                    biome = { require_cwd = true },
+                    oxfmt = { require_cwd = true },
+                    prettier = { require_cwd = true },
+                },
+                default_format_opts = { lsp_format = "fallback" },
+                format_on_save = function(bufnr)
+                    if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+                        return
+                    end
+                    return { timeout_ms = 1000 }
+                end,
+            }
+        end,
         config = function(_, opts)
             require("conform").setup(opts)
             vim.api.nvim_create_user_command("FormatToggle", function()
