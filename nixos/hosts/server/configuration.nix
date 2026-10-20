@@ -190,7 +190,6 @@
       address = [
       	"/missileserv.lan/192.168.0.194"
       	"/desktop.lan/192.168.0.190"
-      	"/auth.misaelaguayo.com/192.168.0.194"
       ];
 
       # listen on localhost and static ip
@@ -409,6 +408,12 @@
 
   # Wait for nas to be mounted before starting containers which depend on its data
   systemd.services.docker = {
+    after = [ "mnt-media.mount" ];
+    requires = [ "mnt-media.mount" ];
+  };
+
+  # Wait for nas to be mounted before starting k3s
+  systemd.services.k3s = {
     after = [ "mnt-media.mount" ];
     requires = [ "mnt-media.mount" ];
   };
