@@ -34,7 +34,6 @@ in
     gc.automatic = true;
   };
 
-  # Expire stale GC roots (result links, .direnv, old profile generations)
   services.angrr = {
     enable = true;
     period = "7d";

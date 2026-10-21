@@ -1,8 +1,11 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  # Out-of-store links point straight at the checkout, so edits to these
-  # configs take effect immediately without a rebuild.
   dotfiles = "${config.home.homeDirectory}/Projects/dotfiles";
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
 in
@@ -33,7 +36,7 @@ in
     nh
     jjui
     lazyjj
-    tree-sitter # nvim-treesitter (main) compiles parsers with it
+    tree-sitter
     gcc
     (neovim.override {
       withPython3 = true;
@@ -57,8 +60,6 @@ in
 
     git.enable = true;
 
-    # Unified diffs with syntax highlighting and line numbers; n/N jump
-    # between files in the pager
     delta = {
       enable = true;
       enableGitIntegration = true;
@@ -70,10 +71,8 @@ in
 
     zoxide.enable = true;
 
-    # a program module rather than a bare package so Stylix can theme it
     bat.enable = true;
 
-    # searchable shell history; `atuin login` once per machine to sync
     atuin.enable = true;
 
     carapace.enable = true;
@@ -101,7 +100,11 @@ in
           command = "prompt";
           format = "$output";
           ignore_timeout = true;
-          shell = [ "starship-jj" "--ignore-working-copy" "starship" ];
+          shell = [
+            "starship-jj"
+            "--ignore-working-copy"
+            "starship"
+          ];
           use_stdin = false;
           when = true;
         };
@@ -118,7 +121,13 @@ in
           "$sudo$cmd_duration$line_break$jobs$battery$time$status$container"
           "$netns$os$shell$character"
         ];
-        vcs.order = [ "jj" "git" "hg" "pijul" "fossil" ];
+        vcs.order = [
+          "jj"
+          "git"
+          "hg"
+          "pijul"
+          "fossil"
+        ];
       };
     };
   };

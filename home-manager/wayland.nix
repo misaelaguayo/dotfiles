@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   c = config.lib.stylix.colors;
@@ -41,32 +46,32 @@ in
       ];
 
       general = {
-        gaps_in  = 5;
+        gaps_in = 5;
         gaps_out = 15;
         border_size = 2;
-        "col.active_border"   = lib.mkForce "rgba(${c.base0E}ff) rgba(${c.base0D}ff) 45deg";
+        "col.active_border" = lib.mkForce "rgba(${c.base0E}ff) rgba(${c.base0D}ff) 45deg";
         "col.inactive_border" = lib.mkForce "rgba(${c.base01}aa)";
         resize_on_border = true;
         layout = "dwindle";
       };
 
       decoration = {
-        rounding         = 12;
-        active_opacity   = 1.0;
+        rounding = 12;
+        active_opacity = 1.0;
         inactive_opacity = 0.93;
 
         blur = {
-          enabled           = true;
-          size              = 8;
-          passes            = 3;
+          enabled = true;
+          size = 8;
+          passes = 3;
           new_optimizations = true;
         };
 
         shadow = {
-          enabled      = true;
-          range        = 8;
+          enabled = true;
+          range = 8;
           render_power = 2;
-          color        = lib.mkForce "rgba(${c.base00}99)";
+          color = lib.mkForce "rgba(${c.base00}99)";
         };
       };
 
@@ -89,9 +94,9 @@ in
       };
 
       input = {
-        kb_layout     = "us";
-        follow_mouse  = 1;
-        sensitivity   = 0;
+        kb_layout = "us";
+        follow_mouse = 1;
+        sensitivity = 0;
         accel_profile = "flat";
       };
 
@@ -103,9 +108,8 @@ in
 
       misc = {
         force_default_wallpaper = 0;
-        disable_hyprland_logo   = true;
-        # Variable refresh rate for fullscreen apps (games) only
-        vrr                     = 2;
+        disable_hyprland_logo = true;
+        vrr = 2;
       };
 
       bind = [
@@ -204,11 +208,11 @@ in
   services.mako = {
     enable = true;
     settings = {
-      border-radius    = 8;
-      border-size      = 2;
-      default-timeout  = 5000;
-      padding          = "12";
-      margin           = "12";
+      border-radius = 8;
+      border-size = 2;
+      default-timeout = 5000;
+      padding = "12";
+      margin = "12";
     };
   };
 
@@ -236,64 +240,79 @@ in
     enable = true;
     settings = {
       mainBar = {
-        layer    = "top";
+        layer = "top";
         position = "top";
-        height   = 36;
-        spacing  = 2;
+        height = 36;
+        spacing = 2;
 
-        modules-left   = [ "hyprland/workspaces" "hyprland/window" ];
+        modules-left = [
+          "hyprland/workspaces"
+          "hyprland/window"
+        ];
         modules-center = [ "clock" ];
-        modules-right  = [ "pulseaudio" "network" "cpu" "memory" "tray" ];
+        modules-right = [
+          "pulseaudio"
+          "network"
+          "cpu"
+          "memory"
+          "tray"
+        ];
 
         "hyprland/workspaces" = {
           format = "{icon}";
           format-icons = {
             default = "○";
-            active  = "●";
-            urgent  = "◉";
+            active = "●";
+            urgent = "◉";
           };
-          on-scroll-up   = "hyprctl dispatch workspace e+1";
+          on-scroll-up = "hyprctl dispatch workspace e+1";
           on-scroll-down = "hyprctl dispatch workspace e-1";
         };
 
         "hyprland/window" = {
-          max-length       = 60;
+          max-length = 60;
           separate-outputs = true;
         };
 
         clock = {
-          format         = " {:%H:%M}";
-          format-alt     = " {:%A %b %d}";
+          format = " {:%H:%M}";
+          format-alt = " {:%A %b %d}";
           tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
         };
 
         cpu = {
-          format   = " {usage}%";
+          format = " {usage}%";
           interval = 2;
         };
 
         memory = {
-          format   = " {}%";
+          format = " {}%";
           interval = 5;
         };
 
         network = {
-          format-ethernet     = "󰈀 {ipaddr}";
-          format-wifi         = " {signalStrength}%";
+          format-ethernet = "󰈀 {ipaddr}";
+          format-wifi = " {signalStrength}%";
           format-disconnected = "󰖪";
-          tooltip-format      = "{ifname}: {ipaddr}";
+          tooltip-format = "{ifname}: {ipaddr}";
         };
 
         pulseaudio = {
-          format       = "{icon} {volume}%";
+          format = "{icon} {volume}%";
           format-muted = "󰖁 muted";
-          format-icons = { default = [ "󰕿" "󰖀" "󰕾" ]; };
-          on-click     = "pavucontrol";
-          scroll-step  = 5;
+          format-icons = {
+            default = [
+              "󰕿"
+              "󰖀"
+              "󰕾"
+            ];
+          };
+          on-click = "pavucontrol";
+          scroll-step = 5;
         };
 
         tray = {
-          spacing   = 8;
+          spacing = 8;
           icon-size = 16;
         };
       };

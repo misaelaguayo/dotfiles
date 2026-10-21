@@ -8,18 +8,21 @@ let
   steamStop = pkgs.writeShellScript "sunshine-steam-stop" ''
     pkill -x steam || true
   '';
-  # Drop the monitor to 60Hz while streaming so 60fps captures pace evenly
-  setRefresh = rate: pkgs.writeShellScript "sunshine-refresh-${rate}" ''
-    export XDG_RUNTIME_DIR=/run/user/1000
-    export PATH=/etc/profiles/per-user/misael/bin:$PATH
-    export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr" | head -n1)
-    hyprctl keyword monitor "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@${rate},auto,1"
-  '';
+
+  setRefresh =
+    rate:
+    pkgs.writeShellScript "sunshine-refresh-${rate}" ''
+      export XDG_RUNTIME_DIR=/run/user/1000
+      export PATH=/etc/profiles/per-user/misael/bin:$PATH
+      export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr" | head -n1)
+      hyprctl keyword monitor "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@${rate},auto,1"
+    '';
   refreshPrep = {
     do = "sudo -u misael ${setRefresh "60"}";
     undo = "sudo -u misael ${setRefresh "144"}";
   };
-in {
+in
+{
   imports = [
     ./hardware-configuration.nix
     ./hermes.nix
@@ -38,12 +41,13 @@ in {
 
   time.timeZone = "America/Chicago";
 
-  # Power off at midnight; the RTC alarm powers the machine back on at 8am.
-  # Needs RTC wake enabled in the BIOS (and ErP/deep sleep off).
   systemd.services.nightly-poweroff = {
     description = "Power off for the night and wake at 8am";
     serviceConfig.Type = "oneshot";
-    path = [ pkgs.util-linux pkgs.coreutils ];
+    path = [
+      pkgs.util-linux
+      pkgs.coreutils
+    ];
     script = ''
       wake=$(date -d 'today 08:00' +%s)
       [ "$wake" -gt "$(date +%s)" ] || wake=$(date -d 'tomorrow 08:00' +%s)
@@ -159,7 +163,9 @@ in {
               undo = "sudo -u misael ${steamStop}";
             }
           ];
-          detached = [ "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DISPLAY=:1 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui -fullscreen" ];
+          detached = [
+            "sudo -u misael env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DISPLAY=:1 PULSE_SERVER=unix:/run/user/1000/pulse/native DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setsid steam -gamepadui -fullscreen"
+          ];
           image-path = "steam.png";
         }
       ];
@@ -175,7 +181,10 @@ in {
       commands = [
         {
           command = "ALL";
-          options = [ "NOPASSWD" "SETENV" ];
+          options = [
+            "NOPASSWD"
+            "SETENV"
+          ];
         }
       ];
     }
@@ -213,7 +222,14 @@ in {
   users.users.misael = {
     isNormalUser = true;
     description = "misael";
-    extraGroups = [ "networkmanager" "wheel" "video" "render" "uinput" "input" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "video"
+      "render"
+      "uinput"
+      "input"
+    ];
     packages = with pkgs; [
       (neovim.override {
         withPython3 = true;
@@ -229,15 +245,11 @@ in {
 
   hardware.uinput.enable = true;
 
-  # RGB: Corsair Lighting Node Core (case), Harpoon mouse, GMMK Pro keyboard,
-  # and the board/RAM over SMBus ("intel" loads i2c-dev + i2c-i801 for that).
   services.hardware.openrgb = {
     enable = true;
     motherboard = "intel";
   };
 
-  # Lights off at boot: once the OpenRGB server is up and has finished
-  # detecting devices, set every device it found to black.
   systemd.services.lights-off = {
     description = "Turn off RGB lighting";
     wantedBy = [ "multi-user.target" ];
@@ -245,10 +257,7 @@ in {
     requires = [ "openrgb.service" ];
     serviceConfig = {
       Type = "oneshot";
-      # device detection takes a few seconds after the server starts
       ExecStartPre = "${pkgs.coreutils}/bin/sleep 10";
-      # --client takes an optional address and would swallow a following
-      # flag, so give it one explicitly
       ExecStart = "${config.services.hardware.openrgb.package}/bin/openrgb --client 127.0.0.1:${toString config.services.hardware.openrgb.server.port} --color 000000";
     };
   };
@@ -258,7 +267,6 @@ in {
   programs.firefox.enable = true;
   programs.steam.enable = true;
 
-  # Prevent suspend so SSH and Sunshine streams aren't dropped on idle
   services.logind.settings.Login = {
     IdleAction = "ignore";
     HandleSuspendKey = "ignore";

@@ -10,7 +10,6 @@
 }:
 {
   imports = [
-    # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ./forgejo.nix
   ];
@@ -23,19 +22,10 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "missileserv"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # query dnsmasq for internet
   networking.nameservers = [ "127.0.0.1" ];
 
-  # disable resolved to prevent conflicts on port 53 for dnsmasq
   services.resolved.enable = false;
 
-  # Enable networking
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
 
@@ -87,11 +77,7 @@
   # Enable automatic login for the user.
   services.getty.autologinUser = "missileserv";
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
-    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    #  wget
     neovim
     iptables
     git
@@ -103,22 +89,6 @@
     xauth
   ];
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-
-  # services.syncthing = {
-  # openDefaultPorts = true;
-  # guiAddress = "0.0.0.0:8384";
-  # };
-
-  # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
     settings.X11Forwarding = true;
@@ -126,18 +96,12 @@
 
   programs.ssh.setXAuthLocation = true;
 
-  # mosh for resilient connections over patchy wifi (UDP, survives roaming/dropouts)
   programs.mosh.enable = true;
 
-  # Automatic system reboot
   services.cron.systemCronJobs = [
-    # Schedule a reboot every day at midnight
     "0 0 * * * root ${pkgs.systemd}/bin/systemctl reboot"
   ];
 
-  # Hardware watchdog: if the system fully hangs (e.g. a resource-exhaustion
-  # pileup that the midnight cron reboot can't run through), pet /dev/watchdog
-  # every ~10s and let it hard-reset the box if nothing pets it for 30s.
   systemd.settings.Manager.RuntimeWatchdogSec = "30s";
 
   services.avahi = {
@@ -164,10 +128,8 @@
         "/desktop.lan/192.168.0.190"
       ];
 
-      # listen on localhost and static ip
       listen-address = "127.0.0.1,192.168.0.194";
 
-      # arr stack can starve dns hits
       cache-size = 10000;
       dns-forward-max = 1000;
     };
@@ -177,7 +139,6 @@
     enable = true;
   };
 
-  # Cloudflare API token for Caddy's ACME DNS-01 challenge on misael.sh.
   age.secrets.cloudflare-caddy = {
     file = ../../../secrets/cloudflare-caddy.age;
     owner = "caddy";
@@ -185,7 +146,6 @@
 
   systemd.services.caddy.serviceConfig.EnvironmentFile = config.age.secrets.cloudflare-caddy.path;
 
-  # reverse proxy for accessing programs
   services.caddy = {
     enable = true;
     email = "aguayomisael@gmail.com";
@@ -222,8 +182,6 @@
       	      }
       	    }
 
-      	    # Publicly trusted (Let's Encrypt), so OIDC clients need no custom CA.
-      	    # Host resolver is dnsmasq; check TXT propagation against 1.1.1.1.
       	    auth.misael.sh {
       	      tls {
       	        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
@@ -295,8 +253,6 @@
       		      reverse_proxy 127.0.0.1:30656
       		    }
 
-      		    # Kavita has its own OIDC login against Authentik, so it
-      		    # skips the forward_auth gate (same as home/grafana).
       		    handle /kavita* {
       		      reverse_proxy 127.0.0.1:30500
       		    }
@@ -313,8 +269,6 @@
       		      reverse_proxy 127.0.0.1:30300
       		    }
 
-      		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
-      		    # ::1, so k8s upstreams use the IPv4 address, not localhost.
       		    handle /argocd* {
       		      forward_auth 127.0.0.1:30900 {
       		        uri /outpost.goauthentik.io/auth/caddy
@@ -323,17 +277,11 @@
       		      reverse_proxy 127.0.0.1:30080
       		    }
 
-      		    # Readeck (k3s). No forward_auth: Readeck signs in via Authentik
-      		    # OIDC itself, and its API (browser extension, apps) uses tokens
-      		    # that forward_auth would block. Served under its /readeck/ prefix,
-      		    # so handle (not handle_path).
       		    redir /readeck /readeck/
       		    handle /readeck/* {
       		      reverse_proxy 127.0.0.1:30800
       		    }
 
-      		    # catch-all: dashboard linking out to everything above. Must stay
-      		    # last so it doesn't shadow the more specific handles.
       		    handle {
       		      forward_auth 127.0.0.1:30900 {
       		        uri /outpost.goauthentik.io/auth/caddy
@@ -388,7 +336,6 @@
     };
   };
 
-  # Start docker daemon
   virtualisation.docker.enable = true;
 
   services.k3s = {
@@ -397,25 +344,21 @@
     extraFlags = "--disable=traefik --kube-proxy-arg=nodeport-addresses=127.0.0.1/32";
   };
 
-  # Wait for nas to be mounted before starting containers which depend on its data
   systemd.services.docker = {
     after = [ "mnt-media.mount" ];
     requires = [ "mnt-media.mount" ];
   };
 
-  # Wait for nas to be mounted before starting k3s
   systemd.services.k3s = {
     after = [ "mnt-media.mount" ];
     requires = [ "mnt-media.mount" ];
   };
 
-  # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
     22
     8384
   ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
+
   networking.firewall.enable = false;
 
   networking.firewall.extraCommands = ''

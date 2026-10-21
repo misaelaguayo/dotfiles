@@ -5,7 +5,6 @@
   environment.systemPackages = [ pkgs.cifs-utils ];
 
   fileSystems."/mnt/smb" = {
-    # Synology exposes shared folders by name, not by /volumeN path
     device = "//192.168.0.43/SMB";
     fsType = "cifs";
     options = [
