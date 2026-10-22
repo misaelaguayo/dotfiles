@@ -68,11 +68,15 @@ return {
         config = function()
             -- nixpkgs roslyn-ls doesn't support --daemon-mode, so override the default cmd
             vim.lsp.config("roslyn", {
+                -- razor buffers are slow through roslyn-ls; keep it to plain C#
+                filetypes = { "cs" },
                 cmd = {
                     "Microsoft.CodeAnalysis.LanguageServer",
                     "--logLevel",
                     "Information",
                     "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.log.get_filename()),
+                    "--sourceGeneratorExecutionPreference",
+                    "Balanced",
                     "--stdio",
                     "--clientProcessId",
                     tostring(vim.uv.os_getpid()),

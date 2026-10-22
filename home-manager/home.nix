@@ -25,6 +25,8 @@
 
   fonts.fontconfig.enable = true;
 
+  home.sessionVariables.CLAUDE_CODE_CERT_STORE = "bundled,system";
+
   xdg.configFile."ghostty/config".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/dotfiles/ghostty/config";
 
