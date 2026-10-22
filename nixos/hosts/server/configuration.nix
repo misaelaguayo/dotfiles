@@ -91,7 +91,7 @@
     wl-clipboard
     mesa
     libGL
-    xorg.xauth
+    xauth
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -130,45 +130,6 @@
   # pileup that the midnight cron reboot can't run through), pet /dev/watchdog
   # every ~10s and let it hard-reset the box if nothing pets it for 30s.
   systemd.settings.Manager.RuntimeWatchdogSec = "30s";
-
-  # Shared resource pool for the *arr stack (chaptarr/sonarr/radarr/prowlarr).
-  # Containers are assigned to this slice via `cgroup_parent` in their
-  # docker-compose.yml so any one of them can burst up to the whole pool
-  # while the others are idle, but the combined total is capped so a scan
-  # in one of them can't starve the rest of the host.
-  systemd.slices."arr-stack".sliceConfig = {
-    CPUQuota = "400%"; # up to 4 of the 8 logical cores, shared
-    MemoryMax = "16G";
-    IOReadBandwidthMax = "/dev/sda 40M";
-    IOReadIOPSMax = "/dev/sda 800";
-  };
-
-  # torrent/flaresolverr use network_mode: "service:vpn" in
-  # ~/Projects/vpn/docker-compose.yml, which pins them to the vpn
-  # container's network namespace by container ID. If vpn is ever
-  # recreated (new ID), Docker's restart policy can't re-resolve that
-  # reference and the dependent container is orphaned forever - it keeps
-  # failing to restart with "No such container" instead of recovering.
-  # Periodically re-running `compose up` reconciles any such orphan
-  # against whatever vpn container currently exists.
-  systemd.services."vpn-stack-reconcile" = {
-    description = "Re-attach any vpn-stack containers orphaned by a vpn container recreation";
-    serviceConfig = {
-      Type = "oneshot";
-      User = "missileserv";
-      WorkingDirectory = "/home/missileserv/Projects/vpn";
-      ExecStart = "${pkgs.docker}/bin/docker compose up -d";
-    };
-  };
-
-  systemd.timers."vpn-stack-reconcile" = {
-    description = "Timer for vpn-stack-reconcile";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "2m";
-      OnUnitActiveSec = "15m";
-    };
-  };
 
   # mDNS setup to allow *.local discovery
   services.avahi = {
@@ -395,11 +356,6 @@
   # Start docker daemon
   virtualisation.docker.enable = true;
 
-  # Single-node k3s for learning/experimentation alongside the docker
-  # compose stack. Traefik is disabled since Caddy already owns 80/443.
-  # NodePorts only listen on localhost (the firewall is off), so apps are
-  # reachable solely through Caddy's forward_auth, like the compose
-  # 127.0.0.1:X port bindings.
   services.k3s = {
     enable = true;
     role = "server";
