@@ -3,10 +3,16 @@
 let
   misael = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHXOE7ndiXgA0cPKpKdHNvIgNdhgJT/d/DMdssCy+EuN";
   desktop = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILQZBiJMmIg9GSqfqgBrvFjiI17pAd1bVuLIBodwotH2";
+  missileserv = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJYNbOkWKgixnv+jcdL9aSl58A/tXNLfhWpoFEnsv7cX";
 in
 {
   "nas-smb-credentials.age".publicKeys = [
     misael
     desktop
+  ];
+
+  "cloudflare-caddy.age".publicKeys = [
+    misael
+    missileserv
   ];
 }

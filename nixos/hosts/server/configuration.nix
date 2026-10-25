@@ -2,16 +2,17 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ lib
-, config
-, pkgs
-, ...
-}: {
-  imports =
-    [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
+{
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -28,7 +29,7 @@
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # query dnsmasq for internet
-  networking.nameservers = [ "127.0.0.1"];
+  networking.nameservers = [ "127.0.0.1" ];
 
   # disable resolved to prevent conflicts on port 53 for dnsmasq
   services.resolved.enable = false;
@@ -69,7 +70,14 @@
   users.users.missileserv = {
     isNormalUser = true;
     description = "missileserv";
-    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" "video" "input" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+      "dialout"
+      "video"
+      "input"
+    ];
     packages = with pkgs; [ claude-code ];
   };
 
@@ -105,8 +113,8 @@
   # List services that you want to enable:
 
   # services.syncthing = {
-    # openDefaultPorts = true;
-    # guiAddress = "0.0.0.0:8384";
+  # openDefaultPorts = true;
+  # guiAddress = "0.0.0.0:8384";
   # };
 
   # Enable the OpenSSH daemon.
@@ -146,11 +154,14 @@
     enable = true;
 
     settings = {
-      server = [ "1.1.1.1" "1.0.0.1" ];
+      server = [
+        "1.1.1.1"
+        "1.0.0.1"
+      ];
 
       address = [
-      	"/missileserv.lan/192.168.0.194"
-      	"/desktop.lan/192.168.0.190"
+        "/missileserv.lan/192.168.0.194"
+        "/desktop.lan/192.168.0.190"
       ];
 
       # listen on localhost and static ip
@@ -166,147 +177,166 @@
     enable = true;
   };
 
+  # Cloudflare API token for Caddy's ACME DNS-01 challenge on misael.sh.
+  age.secrets.cloudflare-caddy = {
+    file = ../../../secrets/cloudflare-caddy.age;
+    owner = "caddy";
+  };
+
+  systemd.services.caddy.serviceConfig.EnvironmentFile = config.age.secrets.cloudflare-caddy.path;
+
   # reverse proxy for accessing programs
   services.caddy = {
     enable = true;
+    email = "aguayomisael@gmail.com";
+
+    package = pkgs.caddy.withPlugins {
+      plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
+      hash = "sha256-5a5cpFl90pEWt0lUC4ZJQ7g+1//ZvsRhee64Dt9vh5o=";
+    };
 
     extraConfig = ''
-	    home.missileserv.lan {
-	      tls internal
-	      reverse_proxy localhost:8123
-	    }
+      	    home.missileserv.lan {
+      	      tls internal
+      	      reverse_proxy localhost:8123
+      	    }
 
-	    hermes.missileserv.lan {
-	      tls internal
-	      reverse_proxy desktop.lan:9119
-	    }
+      	    hermes.missileserv.lan {
+      	      tls internal
+      	      reverse_proxy desktop.lan:9119
+      	    }
 
-	    auth.misaelaguayo.com {
-	      tls internal
-	      reverse_proxy 127.0.0.1:30900
-	    }
+      	    # Publicly trusted (Let's Encrypt), so OIDC clients need no custom CA.
+      	    # Host resolver is dnsmasq; check TXT propagation against 1.1.1.1.
+      	    auth.misael.sh {
+      	      tls {
+      	        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+      	        resolvers 1.1.1.1
+      	      }
+      	      reverse_proxy 127.0.0.1:30900
+      	    }
 
-	    missileserv missileserv.lan {
-	        tls internal
+      	    missileserv missileserv.lan {
+      	        tls internal
 
-	        handle /outpost.goauthentik.io/* {
-	          reverse_proxy 127.0.0.1:30900
-	        }
+      	        handle /outpost.goauthentik.io/* {
+      	          reverse_proxy 127.0.0.1:30900
+      	        }
 
-	        handle /smokeping* {
-	          forward_auth 127.0.0.1:30900 {
-	            uri /outpost.goauthentik.io/auth/caddy
-	            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-	          }
-	          reverse_proxy 127.0.0.1:30101
-	        }
+      	        handle /smokeping* {
+      	          forward_auth 127.0.0.1:30900 {
+      	            uri /outpost.goauthentik.io/auth/caddy
+      	            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      	          }
+      	          reverse_proxy 127.0.0.1:30101
+      	        }
 
-	        handle_path /torrent* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30808
-		    }
+      	        handle_path /torrent* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30808
+      		    }
 
-		    handle /radarr* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30878
-		    }
+      		    handle /radarr* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30878
+      		    }
 
-		    handle /sonarr* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30989
-		    }
+      		    handle /sonarr* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30989
+      		    }
 
-		    handle /chaptarr* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30789
-		    }
+      		    handle /chaptarr* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30789
+      		    }
 
-		    handle /prowlarr* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30696
-		    }
+      		    handle /prowlarr* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30696
+      		    }
 
-		    handle /kapowarr* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30656
-		    }
+      		    handle /kapowarr* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30656
+      		    }
 
-		    # Kavita has its own OIDC login against Authentik, so it
-		    # skips the forward_auth gate (same as home/grafana).
-		    handle /kavita* {
-		      reverse_proxy 127.0.0.1:30500
-		    }
+      		    # Kavita has its own OIDC login against Authentik, so it
+      		    # skips the forward_auth gate (same as home/grafana).
+      		    handle /kavita* {
+      		      reverse_proxy 127.0.0.1:30500
+      		    }
 
-		    handle_path /prometheus* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30909
-		    }
+      		    handle_path /prometheus* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30909
+      		    }
 
-		    handle /grafana* {
-		      reverse_proxy 127.0.0.1:30300
-		    }
+      		    handle /grafana* {
+      		      reverse_proxy 127.0.0.1:30300
+      		    }
 
-		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
-		    # ::1, so k8s upstreams use the IPv4 address, not localhost.
-		    handle /argocd* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30080
-		    }
+      		    # Argo CD (k3s). k3s NodePorts only listen on 127.0.0.1, not
+      		    # ::1, so k8s upstreams use the IPv4 address, not localhost.
+      		    handle /argocd* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30080
+      		    }
 
-		    # Reading tracker (~/Projects/learning). The page uses relative
-		    # API paths, so it needs the trailing slash.
-		    redir /learning /learning/
-		    handle_path /learning/* {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30020
-		    }
+      		    # Reading tracker (~/Projects/learning). The page uses relative
+      		    # API paths, so it needs the trailing slash.
+      		    redir /learning /learning/
+      		    handle_path /learning/* {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30020
+      		    }
 
-		    # Readeck (k3s). No forward_auth: Readeck signs in via Authentik
-		    # OIDC itself, and its API (browser extension, apps) uses tokens
-		    # that forward_auth would block. Served under its /readeck/ prefix,
-		    # so handle (not handle_path).
-		    redir /readeck /readeck/
-		    handle /readeck/* {
-		      reverse_proxy 127.0.0.1:30800
-		    }
+      		    # Readeck (k3s). No forward_auth: Readeck signs in via Authentik
+      		    # OIDC itself, and its API (browser extension, apps) uses tokens
+      		    # that forward_auth would block. Served under its /readeck/ prefix,
+      		    # so handle (not handle_path).
+      		    redir /readeck /readeck/
+      		    handle /readeck/* {
+      		      reverse_proxy 127.0.0.1:30800
+      		    }
 
-		    # catch-all: dashboard linking out to everything above. Must stay
-		    # last so it doesn't shadow the more specific handles.
-		    handle {
-		      forward_auth 127.0.0.1:30900 {
-		        uri /outpost.goauthentik.io/auth/caddy
-		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-		      }
-		      reverse_proxy 127.0.0.1:30010
-		    }
-	    }
+      		    # catch-all: dashboard linking out to everything above. Must stay
+      		    # last so it doesn't shadow the more specific handles.
+      		    handle {
+      		      forward_auth 127.0.0.1:30900 {
+      		        uri /outpost.goauthentik.io/auth/caddy
+      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      		      }
+      		      reverse_proxy 127.0.0.1:30010
+      		    }
+      	    }
     '';
   };
 
@@ -327,28 +357,28 @@
 
   services.zigbee2mqtt = {
     enable = true;
-  
+
     settings = {
       serial = {
         port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_92e8b33651a3ef118dc94cbd61ce3355-if00-port0";
-	adapter="ember";
+        adapter = "ember";
       };
-  
+
       mqtt = {
         server = "mqtt://localhost:1883";
         user = "zigbee";
         password = "zigbee";
       };
-  
+
       frontend = {
-	enabled = true;
+        enabled = true;
         port = 8099;
       };
-  
+
       homeassistant = {
-       enabled = true;
+        enabled = true;
       };
-  
+
       permit_join = false;
     };
   };
@@ -375,7 +405,10 @@
   };
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 22 8384 ];
+  networking.firewall.allowedTCPPorts = [
+    22
+    8384
+  ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
