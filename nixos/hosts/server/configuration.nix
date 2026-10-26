@@ -139,9 +139,8 @@
   # every ~10s and let it hard-reset the box if nothing pets it for 30s.
   systemd.settings.Manager.RuntimeWatchdogSec = "30s";
 
-  # mDNS setup to allow *.local discovery
   services.avahi = {
-    enable = false;
+    enable = true;
     nssmdns4 = true;
     publish = {
       enable = true;
@@ -204,6 +203,22 @@
       	    hermes.missileserv.lan {
       	      tls internal
       	      reverse_proxy desktop.lan:9119
+      	    }
+
+      	    atvloadly.missileserv.lan {
+      	      tls internal
+
+      	      handle /outpost.goauthentik.io/* {
+      	        reverse_proxy 127.0.0.1:30900
+      	      }
+
+      	      handle {
+      	        forward_auth 127.0.0.1:30900 {
+      	          uri /outpost.goauthentik.io/auth/caddy
+      	          copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      	        }
+      	        reverse_proxy 127.0.0.1:30533
+      	      }
       	    }
 
       	    # Publicly trusted (Let's Encrypt), so OIDC clients need no custom CA.
