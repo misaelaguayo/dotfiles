@@ -12,6 +12,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./forgejo.nix
   ];
 
   hardware.bluetooth.enable = true;
@@ -191,7 +192,7 @@
 
     package = pkgs.caddy.withPlugins {
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-      hash = "sha256-5a5cpFl90pEWt0lUC4ZJQ7g+1//ZvsRhee64Dt9vh5o=";
+      hash = "sha256-tubXIDCJnO2mvdnPlZclwDhNGaeeYLSt7lnni3+pXDo=";
     };
 
     extraConfig = ''
@@ -320,17 +321,6 @@
       		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
       		      }
       		      reverse_proxy 127.0.0.1:30080
-      		    }
-
-      		    # Reading tracker (~/Projects/learning). The page uses relative
-      		    # API paths, so it needs the trailing slash.
-      		    redir /learning /learning/
-      		    handle_path /learning/* {
-      		      forward_auth 127.0.0.1:30900 {
-      		        uri /outpost.goauthentik.io/auth/caddy
-      		        copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-      		      }
-      		      reverse_proxy 127.0.0.1:30020
       		    }
 
       		    # Readeck (k3s). No forward_auth: Readeck signs in via Authentik
