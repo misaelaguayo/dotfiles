@@ -164,6 +164,11 @@
       	      reverse_proxy desktop.lan:9119
       	    }
 
+      	    plex.missileserv.lan {
+      	      tls internal
+      	      reverse_proxy 127.0.0.1:32400
+      	    }
+
       	    atvloadly.missileserv.lan {
       	      tls internal
 
@@ -376,12 +381,17 @@
         8099 # zigbee2mqtt frontend
         8123 # home assistant (also behind caddy)
         18555 # home assistant go2rtc webrtc
+        32400 # plex
       ];
       allowedUDPPorts = [
         53 # dnsmasq
         443 # caddy http/3
         1900 # ssdp, home assistant discovery
         18555 # home assistant go2rtc webrtc
+        32410 # plex gdm discovery
+        32412 # plex gdm discovery
+        32413 # plex gdm discovery
+        32414 # plex gdm discovery
       ];
     };
   };
