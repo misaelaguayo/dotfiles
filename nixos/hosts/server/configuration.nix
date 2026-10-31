@@ -12,6 +12,7 @@
   imports = [
     ./hardware-configuration.nix
     ./forgejo.nix
+    ./rex.nix
   ];
 
   hardware.bluetooth.enable = true;
@@ -135,10 +136,7 @@
     };
   };
 
-  services.tailscale = {
-    enable = true;
-  };
-
+  # Cloudflare API token for Caddy's ACME DNS-01 challenge on misael.sh.
   age.secrets.cloudflare-caddy = {
     file = ../../../secrets/cloudflare-caddy.age;
     owner = "caddy";
@@ -354,23 +352,43 @@
     requires = [ "mnt-media.mount" ];
   };
 
-  networking.firewall.allowedTCPPorts = [
-    22
-    8384
-  ];
+  # Only the LAN (eno1) gets in; remote access is the router's WireGuard, whose
+  # clients arrive on the LAN. Docker-published ports bypass this firewall, so
+  # bind those to 127.0.0.1 in their compose files.
+  networking.firewall = {
+    enable = true;
 
-  networking.firewall.enable = false;
+    # containers and k3s pods reach host services (dns, mqtt, ssh) over these
+    trustedInterfaces = [
+      "docker0"
+      "br-+"
+      "cni0"
+      "flannel.1"
+    ];
 
-  networking.firewall.extraCommands = ''
-    iptables -I DOCKER-ISOLATION-STAGE-2 1 -p tcp --dport 22 -j ACCEPT
-  '';
+    interfaces.eno1 = {
+      allowedTCPPorts = [
+        22 # ssh, forgejo ssh
+        53 # dnsmasq
+        80 # caddy
+        443 # caddy
+        7297 # rex (anonymous, so anyone on the LAN gets a shell)
+        8099 # zigbee2mqtt frontend
+        8123 # home assistant (also behind caddy)
+        18555 # home assistant go2rtc webrtc
+      ];
+      allowedUDPPorts = [
+        53 # dnsmasq
+        443 # caddy http/3
+        1900 # ssdp, home assistant discovery
+        18555 # home assistant go2rtc webrtc
+      ];
+    };
+  };
 
   fileSystems."/mnt/media" = {
     device = "192.168.0.43:/volume2/Media";
     fsType = "nfs";
-    options = [
-      "bg"
-    ];
   };
 
   # This value determines the NixOS release from which the default

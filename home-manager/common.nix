@@ -83,6 +83,9 @@ in
         fish_add_path --prepend --move "$HOME/.nix-profile/bin"
         fish_add_path --prepend --move "/nix/var/nix/profiles/default/bin"
       '';
+      interactiveShellInit = ''
+        fish_vi_key_bindings
+      '';
     };
 
     gh = {

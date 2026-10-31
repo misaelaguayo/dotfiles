@@ -283,7 +283,6 @@ in
   ];
 
   services.openssh.enable = true;
-  services.tailscale.enable = true;
 
   networking.firewall.enable = false;
 
