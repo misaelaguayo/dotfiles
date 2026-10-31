@@ -26,6 +26,7 @@ in
   imports = [
     ./hardware-configuration.nix
     ./hermes.nix
+    ./rex.nix
     ./nas.nix
   ];
 
@@ -114,6 +115,7 @@ in
 
   services.avahi = {
     enable = true;
+    openFirewall = false;
     publish = {
       enable = true;
       userServices = true;
@@ -130,7 +132,7 @@ in
 
   services.sunshine = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
     capSysAdmin = true;
     package = pkgs.sunshine.override { cudaSupport = true; };
     settings = {
@@ -284,7 +286,29 @@ in
 
   services.openssh.enable = true;
 
-  networking.firewall.enable = false;
+  networking.firewall = {
+    enable = true;
+
+    interfaces.eno1 = {
+      allowedTCPPorts = [
+        22 # ssh
+        7297 # rex (anonymous, so anyone on the LAN gets a shell)
+        9119 # hermes backend (proxied by caddy on missileserv)
+        47984 # sunshine https
+        47989 # sunshine http
+        47990 # sunshine web ui
+        48010 # sunshine rtsp
+      ];
+      allowedUDPPorts = [
+        5353 # avahi mdns
+        47998 # sunshine video
+        47999 # sunshine control
+        48000 # sunshine audio
+        48002 # sunshine mic
+        48010 # sunshine rtsp
+      ];
+    };
+  };
 
   system.stateVersion = "25.11";
 }
