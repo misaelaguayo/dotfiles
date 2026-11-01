@@ -23,7 +23,8 @@ in
     settings = {
       host = "127.0.0.1";
       port = llamaPort;
-      hf-repo = "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M";
+      hf-repo = "huihui-ai/Huihui-Qwen3.6-35B-A3B-abliterated-MTP-GGUF";
+      hf-file = "Huihui-Qwen3.6-35B-A3B-abliterated-ggml-model-Q4_K.gguf";
       alias = modelAlias;
       no-mmproj = true;
       ctx-size = contextSize;
