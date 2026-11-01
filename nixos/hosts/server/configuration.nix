@@ -186,6 +186,11 @@
       	      }
       	    }
 
+            aiostreams.missileserv.lan {
+              tls internal
+              reverse_proxy 127.0.0.1:30330
+            }
+
       	    auth.misael.sh {
       	      tls {
       	        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
