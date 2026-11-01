@@ -21,188 +21,312 @@ in
     cliphist
   ];
 
+  # Hyprland 0.57 dropped hyprland.conf; settings render as hl.<name>(...) calls
   wayland.windowManager.hyprland = {
     enable = true;
-    configType = "hyprlang";
-    settings = {
-      monitor = [
-        "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@144,auto,1"
-        ",preferred,auto,1"
-      ];
+    configType = "lua";
+    settings =
+      let
+        lua = lib.generators.mkLuaInline;
+        mod = "SUPER";
+        # bind "KEYS" "<lua dispatcher>" [ { flags } ]
+        bind = keys: dsp: flags: {
+          _args = [
+            keys
+            (lua dsp)
+          ]
+          ++ flags;
+        };
+        dirs = {
+          left = "left";
+          right = "right";
+          up = "up";
+          down = "down";
+          h = "left";
+          l = "right";
+          k = "up";
+          j = "down";
+        };
+        dirBinds = prefix: dsp: lib.mapAttrsToList (key: dir: bind "${prefix} + ${key}" (dsp dir) [ ]) dirs;
+        workspaceBinds = lib.concatMap (
+          i:
+          let
+            n = toString i;
+          in
+          [
+            (bind "${mod} + ${n}" "hl.dsp.focus({ workspace = ${n} })" [ ])
+            (bind "${mod} + SHIFT + ${n}" "hl.dsp.window.move({ workspace = ${n} })" [ ])
+          ]
+        ) (lib.range 1 9);
+        exec = cmd: "hl.dsp.exec_cmd([[${cmd}]])";
+        locked = {
+          locked = true;
+        };
+        lockedRepeat = {
+          locked = true;
+          repeating = true;
+        };
+        repeat = {
+          repeating = true;
+        };
+        floatRule = name: class: {
+          inherit name;
+          match.class = class;
+          float = true;
+        };
+      in
+      {
+        monitor = [
+          {
+            output = "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848";
+            mode = "3840x2160@144";
+            position = "auto";
+            scale = 1;
+          }
+          {
+            output = "";
+            mode = "preferred";
+            position = "auto";
+            scale = 1;
+          }
+        ];
 
-      "$mod" = "SUPER";
-      "$terminal" = "ghostty";
-      "$menu" = "rofi -show drun";
+        env = [
+          {
+            _args = [
+              "XCURSOR_SIZE"
+              "24"
+            ];
+          }
+          {
+            _args = [
+              "HYPRCURSOR_SIZE"
+              "24"
+            ];
+          }
+        ];
 
-      exec-once = [
-        "hyprpaper"
-        "waybar"
-        "xhost +local:"
-        "wl-paste --watch cliphist store"
-      ];
-
-      env = [
-        "XCURSOR_SIZE,24"
-        "HYPRCURSOR_SIZE,24"
-      ];
-
-      general = {
-        gaps_in = 5;
-        gaps_out = 15;
-        border_size = 2;
-        "col.active_border" = lib.mkForce "rgba(${c.base0E}ff) rgba(${c.base0D}ff) 45deg";
-        "col.inactive_border" = lib.mkForce "rgba(${c.base01}aa)";
-        resize_on_border = true;
-        layout = "dwindle";
-      };
-
-      decoration = {
-        rounding = 12;
-        active_opacity = 1.0;
-        inactive_opacity = 0.93;
-
-        blur = {
-          enabled = true;
-          size = 8;
-          passes = 3;
-          new_optimizations = true;
+        on = {
+          _args = [
+            "hyprland.start"
+            (lua ''
+              function()
+                hl.exec_cmd("hyprpaper")
+                hl.exec_cmd("waybar")
+                hl.exec_cmd("xhost +local:")
+                hl.exec_cmd("wl-paste --watch cliphist store")
+              end'')
+          ];
         };
 
-        shadow = {
-          enabled = true;
-          range = 8;
-          render_power = 2;
-          color = lib.mkForce "rgba(${c.base00}99)";
+        config = {
+          general = {
+            gaps_in = 5;
+            gaps_out = 15;
+            border_size = 2;
+            "col.active_border" = lib.mkForce {
+              colors = [
+                "rgba(${c.base0E}ff)"
+                "rgba(${c.base0D}ff)"
+              ];
+              angle = 45;
+            };
+            "col.inactive_border" = lib.mkForce "rgba(${c.base01}aa)";
+            resize_on_border = true;
+            layout = "dwindle";
+          };
+
+          decoration = {
+            rounding = 12;
+            active_opacity = 1.0;
+            inactive_opacity = 0.93;
+
+            blur = {
+              enabled = true;
+              size = 8;
+              passes = 3;
+              new_optimizations = true;
+            };
+
+            shadow = {
+              enabled = true;
+              range = 8;
+              render_power = 2;
+              color = lib.mkForce "rgba(${c.base00}99)";
+            };
+          };
+
+          animations.enabled = true;
+
+          input = {
+            kb_layout = "us";
+            follow_mouse = 1;
+            sensitivity = 0;
+            accel_profile = "flat";
+          };
+
+          binds.workspace_back_and_forth = true;
+
+          dwindle.preserve_split = true;
+
+          misc = {
+            force_default_wallpaper = 0;
+            disable_hyprland_logo = true;
+            vrr = 2;
+          };
         };
-      };
 
-      animations = {
-        enabled = true;
-
-        bezier = [
-          "easeOut,   0.16, 1,    0.3,  1"
-          "easeIn,    0.7,  0,    0.84, 0"
-          "easeInOut, 0.87, 0,    0.13, 1"
+        curve = [
+          {
+            _args = [
+              "easeOut"
+              {
+                type = "bezier";
+                points = [
+                  [
+                    0.16
+                    1
+                  ]
+                  [
+                    0.3
+                    1
+                  ]
+                ];
+              }
+            ];
+          }
+          {
+            _args = [
+              "easeIn"
+              {
+                type = "bezier";
+                points = [
+                  [
+                    0.7
+                    0
+                  ]
+                  [
+                    0.84
+                    0
+                  ]
+                ];
+              }
+            ];
+          }
+          {
+            _args = [
+              "easeInOut"
+              {
+                type = "bezier";
+                points = [
+                  [
+                    0.87
+                    0
+                  ]
+                  [
+                    0.13
+                    1
+                  ]
+                ];
+              }
+            ];
+          }
         ];
 
         animation = [
-          "windows,    1, 5, easeOut,   slide"
-          "windowsOut, 1, 4, easeIn,    slide"
-          "border,     1, 10, default"
-          "fade,       1, 5, easeInOut"
-          "workspaces, 1, 5, easeInOut, slidevert"
+          {
+            leaf = "windows";
+            enabled = true;
+            speed = 5;
+            bezier = "easeOut";
+            style = "slide";
+          }
+          {
+            leaf = "windowsOut";
+            enabled = true;
+            speed = 4;
+            bezier = "easeIn";
+            style = "slide";
+          }
+          {
+            leaf = "border";
+            enabled = true;
+            speed = 10;
+            bezier = "default";
+          }
+          {
+            leaf = "fade";
+            enabled = true;
+            speed = 5;
+            bezier = "easeInOut";
+          }
+          {
+            leaf = "workspaces";
+            enabled = true;
+            speed = 5;
+            bezier = "easeInOut";
+            style = "slidevert";
+          }
+        ];
+
+        bind = [
+          (bind "${mod} + RETURN" (exec "ghostty") [ ])
+          (bind "${mod} + Q" "hl.dsp.window.close()" [ ])
+          (bind "${mod} + R" (exec "rofi -show drun") [ ])
+          (bind "${mod} + F" ''hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" })'' [ ])
+          (bind "${mod} + V" ''hl.dsp.window.float({ action = "toggle" })'' [ ])
+          (bind "${mod} + C" (exec "cliphist list | rofi -dmenu -p clipboard | cliphist decode | wl-copy")
+            [ ]
+          )
+          (bind "${mod} + SHIFT + E" "hl.dsp.exit()" [ ])
+
+          # Screenshots
+          (bind "Print" (exec ''grim -g "$(slurp)" - | wl-copy'') [ ])
+          (bind "${mod} + Print" (exec "grim - | wl-copy") [ ])
+
+          # Resize, repeat while held
+          (bind "${mod} + CTRL + h" "hl.dsp.window.resize({ x = -40, y = 0, relative = true })" [ repeat ])
+          (bind "${mod} + CTRL + l" "hl.dsp.window.resize({ x = 40, y = 0, relative = true })" [ repeat ])
+          (bind "${mod} + CTRL + k" "hl.dsp.window.resize({ x = 0, y = -40, relative = true })" [ repeat ])
+          (bind "${mod} + CTRL + j" "hl.dsp.window.resize({ x = 0, y = 40, relative = true })" [ repeat ])
+
+          # Media keys, also work while locked
+          (bind "XF86AudioRaiseVolume" (exec "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+") [
+            lockedRepeat
+          ])
+          (bind "XF86AudioLowerVolume" (exec "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-") [ lockedRepeat ])
+          (bind "XF86AudioMute" (exec "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle") [ locked ])
+          (bind "XF86AudioMicMute" (exec "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle") [ locked ])
+          (bind "XF86AudioPlay" (exec "playerctl play-pause") [ locked ])
+          (bind "XF86AudioNext" (exec "playerctl next") [ locked ])
+          (bind "XF86AudioPrev" (exec "playerctl previous") [ locked ])
+
+          # Super+LMB to move, Super+RMB to resize
+          (bind "${mod} + mouse:272" "hl.dsp.window.drag()" [ { mouse = true; } ])
+          (bind "${mod} + mouse:273" "hl.dsp.window.resize()" [ { mouse = true; } ])
+        ]
+        ++ dirBinds mod (dir: ''hl.dsp.focus({ direction = "${dir}" })'')
+        ++ dirBinds "${mod} + SHIFT" (dir: ''hl.dsp.window.move({ direction = "${dir}" })'')
+        ++ workspaceBinds;
+
+        window_rule = [
+          {
+            name = "steam-float";
+            match = {
+              class = "^(steam)$";
+              title = "negative:^(Steam)$";
+            };
+            float = true;
+          }
+          (floatRule "pavucontrol-float" "^(pavucontrol)$")
+          (floatRule "nm-editor-float" "^(nm-connection-editor)$")
+          {
+            name = "suppress-maximize";
+            match.class = ".*";
+            suppress_event = "maximize";
+          }
         ];
       };
-
-      input = {
-        kb_layout = "us";
-        follow_mouse = 1;
-        sensitivity = 0;
-        accel_profile = "flat";
-      };
-
-      binds.workspace_back_and_forth = true;
-
-      dwindle = {
-        preserve_split = true;
-      };
-
-      misc = {
-        force_default_wallpaper = 0;
-        disable_hyprland_logo = true;
-        vrr = 2;
-      };
-
-      bind = [
-        "$mod,       return, exec,          $terminal"
-        "$mod,       Q,      killactive"
-        "$mod,       R,      exec,          $menu"
-        "$mod,       F,      fullscreen"
-        "$mod,       V,      togglefloating"
-        "$mod,       C,      exec,          cliphist list | rofi -dmenu -p clipboard | cliphist decode | wl-copy"
-        "$mod SHIFT, E,      exit"
-
-        # Focus
-        "$mod, left,  movefocus, l"
-        "$mod, right, movefocus, r"
-        "$mod, up,    movefocus, u"
-        "$mod, down,  movefocus, d"
-        "$mod, h,     movefocus, l"
-        "$mod, l,     movefocus, r"
-        "$mod, k,     movefocus, u"
-        "$mod, j,     movefocus, d"
-
-        # Move windows
-        "$mod SHIFT, left,  movewindow, l"
-        "$mod SHIFT, right, movewindow, r"
-        "$mod SHIFT, up,    movewindow, u"
-        "$mod SHIFT, down,  movewindow, d"
-        "$mod SHIFT, h,     movewindow, l"
-        "$mod SHIFT, l,     movewindow, r"
-        "$mod SHIFT, k,     movewindow, u"
-        "$mod SHIFT, j,     movewindow, d"
-
-        # Workspaces
-        "$mod, 1, workspace, 1"
-        "$mod, 2, workspace, 2"
-        "$mod, 3, workspace, 3"
-        "$mod, 4, workspace, 4"
-        "$mod, 5, workspace, 5"
-        "$mod, 6, workspace, 6"
-        "$mod, 7, workspace, 7"
-        "$mod, 8, workspace, 8"
-        "$mod, 9, workspace, 9"
-
-        # Move window to workspace
-        "$mod SHIFT, 1, movetoworkspace, 1"
-        "$mod SHIFT, 2, movetoworkspace, 2"
-        "$mod SHIFT, 3, movetoworkspace, 3"
-        "$mod SHIFT, 4, movetoworkspace, 4"
-        "$mod SHIFT, 5, movetoworkspace, 5"
-        "$mod SHIFT, 6, movetoworkspace, 6"
-        "$mod SHIFT, 7, movetoworkspace, 7"
-        "$mod SHIFT, 8, movetoworkspace, 8"
-        "$mod SHIFT, 9, movetoworkspace, 9"
-
-        # Screenshots
-        ", Print,     exec, grim -g \"$(slurp)\" - | wl-copy"
-        "$mod, Print, exec, grim - | wl-copy"
-      ];
-
-      # repeat while held
-      binde = [
-        "$mod CTRL, h, resizeactive, -40 0"
-        "$mod CTRL, l, resizeactive, 40 0"
-        "$mod CTRL, k, resizeactive, 0 -40"
-        "$mod CTRL, j, resizeactive, 0 40"
-      ];
-
-      # media keys: e = repeat while held, l = also works while locked
-      bindel = [
-        ", XF86AudioRaiseVolume, exec, wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"
-        ", XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-      ];
-      bindl = [
-        ", XF86AudioMute,    exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-        ", XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
-        ", XF86AudioPlay,    exec, playerctl play-pause"
-        ", XF86AudioNext,    exec, playerctl next"
-        ", XF86AudioPrev,    exec, playerctl previous"
-      ];
-
-      # Super+LMB to move, Super+RMB to resize
-      bindm = [
-        "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
-      ];
-
-      windowrule = [
-        "float on, match:class ^(steam)$, match:title negative:^(Steam)$"
-        "float on, match:class ^(pavucontrol)$"
-        "float on, match:class ^(nm-connection-editor)$"
-        "suppress_event maximize, match:class .*"
-      ];
-    };
   };
 
   # colors and font come from Stylix

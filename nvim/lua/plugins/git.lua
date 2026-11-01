@@ -109,7 +109,30 @@ return {
     -- what it can automatically; for anything left over, `jj resolve --tool
     -- diffconflicts <path>` opens this git-style 3-way merge in nvim (wired up
     -- in ~/.config/jj/config.toml).
-    { "whiteinge/diffconflicts", cmd = { "DiffConflicts", "DiffConflictsWithHistory" } },
+    {
+        "whiteinge/diffconflicts",
+        cmd = { "DiffConflicts", "DiffConflictsWithHistory" },
+        keys = {
+            { "<space>gc", "<cmd>DiffConflicts<CR>", desc = "Resolve conflicts" },
+        },
+    },
+    -- pick a side of the conflict under the cursor. Works off the markers alone,
+    -- unlike git-conflict.nvim, which needs git to report the file as unmerged
+    -- (jj never does).
+    {
+        "rhysd/conflict-marker.vim",
+        init = function()
+            vim.g.conflict_marker_enable_mappings = 0
+        end,
+        keys = {
+            { "]x", "<cmd>ConflictMarkerNextHunk<CR>", desc = "Next conflict" },
+            { "[x", "<cmd>ConflictMarkerPrevHunk<CR>", desc = "Prev conflict" },
+            { "<leader>ac", "<cmd>ConflictMarkerOurselves<CR>", desc = "Accept current" },
+            { "<leader>ai", "<cmd>ConflictMarkerThemselves<CR>", desc = "Accept incoming" },
+            { "<leader>ab", "<cmd>ConflictMarkerBoth<CR>", desc = "Accept both" },
+            { "<leader>an", "<cmd>ConflictMarkerNone<CR>", desc = "Accept none" },
+        },
+    },
     "tpope/vim-fugitive",
     {
         "sindrets/diffview.nvim",

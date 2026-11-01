@@ -30,6 +30,7 @@ diff-tool = "difft"
 [merge-tools.diffconflicts]
 program = "nvim"
 merge-args = ["-c", "DiffConflicts", "$output", "$base", "$left", "$right"]
+merge-tool-edits-conflict-markers = true
 
 [aliases]
 # Find the closest ancestor with a bookmark pointing at it, and move it to the

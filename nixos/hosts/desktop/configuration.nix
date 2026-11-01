@@ -15,7 +15,7 @@ let
       export XDG_RUNTIME_DIR=/run/user/1000
       export PATH=/etc/profiles/per-user/misael/bin:$PATH
       export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr" | head -n1)
-      hyprctl keyword monitor "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@${rate},auto,1"
+      hyprctl eval 'hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848", mode = "3840x2160@${rate}", position = "auto", scale = 1 })'
     '';
   refreshPrep = {
     do = "sudo -u misael ${setRefresh "60"}";
