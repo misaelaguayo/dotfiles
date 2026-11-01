@@ -6,6 +6,10 @@
 
   home-manager.users.misael = {
     programs.rex.enable = true;
+    programs.ssh = {
+      enable = true;
+      enableDefaultConfig = false;
+    };
 
     services.rex = {
       enable = true;

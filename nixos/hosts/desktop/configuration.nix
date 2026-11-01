@@ -116,9 +116,9 @@ in
   services.avahi = {
     enable = true;
     openFirewall = false;
-    publish = {
-      enable = true;
-      userServices = true;
+    settings.publish = {
+      disable-publishing = false;
+      disable-user-service-publishing = false;
     };
   };
 
@@ -281,8 +281,8 @@ in
   systemd.targets.hybrid-sleep.enable = false;
 
   environment.systemPackages = with pkgs; [
-    xorg.xrandr
-    xorg.xhost
+    xrandr
+    xhost
   ];
 
   services.openssh.enable = true;

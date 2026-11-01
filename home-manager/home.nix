@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   imports = [ ./common.nix ];
@@ -8,8 +13,14 @@
       allowUnfree = true;
       allowUnfreePredicate = (_: true);
     };
+  };
 
-    overlays = [ (import ./overlay.nix) ];
+  nix = {
+    package = pkgs.nix;
+    settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
   };
 
   fonts.fontconfig.enable = true;
@@ -63,7 +74,7 @@
           ];
       })
     ]
-    ++ lib.optionals stdenv.isDarwin [
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [
       yabai
       skhd
       firefox

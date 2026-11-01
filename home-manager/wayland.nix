@@ -23,6 +23,7 @@ in
 
   wayland.windowManager.hyprland = {
     enable = true;
+    configType = "hyprlang";
     settings = {
       monitor = [
         "desc:LG Electronics LG ULTRAGEAR+ 206NTLE9G848,3840x2160@144,auto,1"

@@ -7,6 +7,10 @@
 
   home-manager.users.missileserv = {
     programs.rex.enable = true;
+    programs.ssh = {
+      enable = true;
+      enableDefaultConfig = false;
+    };
 
     services.rex = {
       enable = true;

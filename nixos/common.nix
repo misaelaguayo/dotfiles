@@ -45,6 +45,5 @@ in
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "hm-bak";
 
-  nixpkgs.overlays = [ (import ../home-manager/overlay.nix) ];
   nixpkgs.config.allowUnfree = true;
 }
