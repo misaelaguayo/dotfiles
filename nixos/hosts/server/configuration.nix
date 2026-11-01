@@ -71,6 +71,7 @@
       "input"
     ];
     packages = with pkgs; [ claude-code ];
+    shell = pkgs.fish;
   };
 
   home-manager.users.missileserv = import ../../../home-manager/server.nix;

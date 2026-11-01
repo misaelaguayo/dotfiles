@@ -241,6 +241,7 @@ in
       zellij
       claude-code
     ];
+    shell = pkgs.fish;
   };
 
   home-manager.users.misael = import ../../../home-manager/desktop.nix;

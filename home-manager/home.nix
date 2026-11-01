@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports = [ ./common.nix ];
@@ -16,6 +16,17 @@
 
   xdg.configFile."ghostty/config".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/dotfiles/ghostty/config";
+
+  # Standalone home-manager can't set the login shell on macOS, so warn until it's fish
+  home.activation.checkLoginShell = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    loginShell=$(/usr/bin/dscl . -read "/Users/$USER" UserShell | /usr/bin/awk '{print $2}')
+    if [ "$(basename "$loginShell")" != fish ]; then
+      fishPath="${config.home.profileDirectory}/bin/fish"
+      warnEcho "Login shell is $loginShell, not fish. To fix:"
+      warnEcho "  grep -qx $fishPath /etc/shells || echo $fishPath | sudo tee -a /etc/shells"
+      warnEcho "  chsh -s $fishPath"
+    fi
+  '';
 
   home.packages =
     with pkgs;
