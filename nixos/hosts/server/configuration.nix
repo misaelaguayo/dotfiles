@@ -94,6 +94,8 @@
   services.openssh = {
     enable = true;
     settings.X11Forwarding = true;
+    settings.PasswordAuthentication = false;
+    settings.KbdInteractiveAuthentication = false;
     openFirewall = false;
   };
 
@@ -453,12 +455,18 @@
     };
 
     extraCommands = ''
+      # the first line removes the previous rule, and can go after this switch
       iptables -t raw -D PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP 2>/dev/null || true
-      iptables -t raw -I PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP
+      iptables -t raw -D PREROUTING -i wg0 -j DROP 2>/dev/null || true
+      iptables -t raw -D PREROUTING -i wg0 -p tcp -d 10.100.0.2 --dport 8443 -j ACCEPT 2>/dev/null || true
+      iptables -t raw -I PREROUTING -i wg0 -j DROP
+      iptables -t raw -I PREROUTING -i wg0 -p tcp -d 10.100.0.2 --dport 8443 -j ACCEPT
     '';
     extraStopCommands = ''
-      iptables -t raw -D PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP 2>/dev/null || true
+      iptables -t raw -D PREROUTING -i wg0 -j DROP 2>/dev/null || true
+      iptables -t raw -D PREROUTING -i wg0 -p tcp -d 10.100.0.2 --dport 8443 -j ACCEPT 2>/dev/null || true
     '';
+
   };
 
   fileSystems."/mnt/media" = {
