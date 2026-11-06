@@ -94,11 +94,13 @@
   services.openssh = {
     enable = true;
     settings.X11Forwarding = true;
+    openFirewall = false;
   };
 
   programs.ssh.setXAuthLocation = true;
 
   programs.mosh.enable = true;
+  programs.mosh.openFirewall = false;
 
   services.cron.systemCronJobs = [
     "0 0 * * * root ${pkgs.systemd}/bin/systemctl reboot"
@@ -109,6 +111,7 @@
   services.avahi = {
     enable = true;
     nssmdns4 = true;
+    openFirewall = false;
     settings.publish = {
       disable-publishing = false;
       publish-addresses = true;
@@ -128,6 +131,7 @@
       address = [
         "/missileserv.lan/192.168.0.194"
         "/desktop.lan/192.168.0.190"
+        "/abs.misael.sh/192.168.0.194"
       ];
 
       listen-address = "127.0.0.1,192.168.0.194";
@@ -143,6 +147,11 @@
     owner = "caddy";
   };
 
+  # Wireguard private key for connection to vps
+  age.secrets.wg-missileserv = {
+    file = ../../../secrets/wg-missileserv.age;
+  };
+
   systemd.services.caddy.serviceConfig.EnvironmentFile = config.age.secrets.cloudflare-caddy.path;
 
   services.caddy = {
@@ -153,6 +162,17 @@
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
       hash = "sha256-tubXIDCJnO2mvdnPlZclwDhNGaeeYLSt7lnni3+pXDo=";
     };
+
+    globalConfig = ''
+      servers :8443 {
+          listener_wrappers {
+              proxy_protocol {
+                  allow 10.100.0.1/32
+              }
+              tls
+          }
+      }
+    '';
 
     extraConfig = ''
       	    home.missileserv.lan {
@@ -197,6 +217,14 @@
       	        resolvers 1.1.1.1
       	      }
       	      reverse_proxy 127.0.0.1:30900
+      	    }
+
+      	    abs.misael.sh abs.misael.sh:8443 {
+      	      tls {
+      	        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+      	        resolvers 1.1.1.1
+      	      }
+      	      reverse_proxy 127.0.0.1:30378
       	    }
 
       	    missileserv missileserv.lan {
@@ -363,8 +391,22 @@
     requires = [ "mnt-media.mount" ];
   };
 
+  networking.wireguard.interfaces.wg0 = {
+    ips = [ "10.100.0.2/32" ];
+    privateKeyFile = config.age.secrets.wg-missileserv.path;
+    peers = [
+      {
+        publicKey = "QO9Za75gB/30wOWcEzs/r8d43eBqYp6YPhpYK3oWWjc=";
+        endpoint = "135.148.218.188:51820";
+        allowedIPs = [ "10.100.0.1/32" ];
+        persistentKeepalive = 25;
+      }
+    ];
+  };
+
   # Only the LAN (eno1) gets in; remote access is the router's WireGuard, whose
-  # clients arrive on the LAN. Docker-published ports bypass this firewall, so
+  # clients arrive on the LAN, or through server wireguard whose only port allowed is 8443.
+  # Docker-published ports bypass this firewall, so
   # bind those to 127.0.0.1 in their compose files.
   networking.firewall = {
     enable = true;
@@ -377,6 +419,7 @@
       "flannel.1"
     ];
 
+    interfaces.wg0.allowedTCPPorts = [ 8443 ];
     interfaces.eno1 = {
       allowedTCPPorts = [
         22 # ssh, forgejo ssh
@@ -392,6 +435,7 @@
       allowedUDPPorts = [
         53 # dnsmasq
         443 # caddy http/3
+        5353 # avahi mdns
         1900 # ssdp, home assistant discovery
         18555 # home assistant go2rtc webrtc
         32410 # plex gdm discovery
@@ -399,7 +443,22 @@
         32413 # plex gdm discovery
         32414 # plex gdm discovery
       ];
+      # mosh
+      allowedUDPPortRanges = [
+        {
+          from = 60000;
+          to = 61000;
+        }
+      ];
     };
+
+    extraCommands = ''
+      iptables -t raw -D PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP 2>/dev/null || true
+      iptables -t raw -I PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP
+    '';
+    extraStopCommands = ''
+      iptables -t raw -D PREROUTING -i wg0 ! -d 10.100.0.2 -j DROP 2>/dev/null || true
+    '';
   };
 
   fileSystems."/mnt/media" = {

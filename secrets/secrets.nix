@@ -15,4 +15,9 @@ in
     misael
     missileserv
   ];
+
+  "wg-missileserv.age".publicKeys = [
+    misael
+    missileserv
+  ];
 }
